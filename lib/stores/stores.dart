@@ -396,3 +396,58 @@ class IaStore extends ChangeNotifier {
     };
   }
 }
+
+class LogisticaStore extends ChangeNotifier {
+  String _abaAtiva = 'entregas';
+  List<Map<String, dynamic>> _pedidos = [];
+  List<Map<String, dynamic>> _transferencias = [];
+
+  String get abaAtiva => _abaAtiva;
+  List<Map<String, dynamic>> get pedidos => _pedidos;
+  List<Map<String, dynamic>> get transferencias => _transferencias;
+
+  int get pedidosAtrasados =>
+      _pedidos.where((p) => p['status'] == 'atrasado').length;
+  int get pedidosEmRota =>
+      _pedidos.where((p) => p['status'] == 'em_rota').length;
+
+  void mudarAba(String aba) {
+    _abaAtiva = aba;
+    notifyListeners();
+  }
+
+  void carregarMock() {
+    _pedidos = [
+      {
+        'id': 38, 'codigo': '#OG038', 'fornecedor': 'ForneceMed',
+        'status': 'atrasado', 'eta': '12h00', 'sla_excedido': '2h10',
+        'item': 'Soro Fisiológico 500ml',
+      },
+      {
+        'id': 41, 'codigo': '#OG041', 'fornecedor': 'MediSupply',
+        'status': 'em_rota', 'eta': '16h30', 'item': 'Seringa 5ml · 500 un',
+      },
+      {
+        'id': 39, 'codigo': '#OG039', 'fornecedor': 'ForneceMed',
+        'status': 'entregue', 'hora_entrega': '13h44',
+        'item': 'Luva Estéril P · 200 cx',
+      },
+    ];
+    _transferencias = [
+      {
+        'id': 1, 'origem': 'Santa Casa – Campinas',
+        'destino': 'HC Unicamp', 'item': 'Morfina 10mg/ml',
+        'quantidade': 18, 'urgencia': 'imediata', 'status': 'pendente',
+        'sugerida_por_ia': true,
+      },
+      {
+        'id': 2, 'origem': 'HC Unicamp',
+        'destino': 'Santa Casa – Campinas', 'item': 'Epinefrina 1mg/ml',
+        'quantidade': 10, 'urgencia': 'preventiva', 'status': 'pendente',
+        'sugerida_por_ia': true,
+      },
+    ];
+    notifyListeners();
+  }
+}
+

@@ -5,6 +5,7 @@ import 'package:hospitalmanagement_flutter/features/alertas/alertas_screen.dart'
 import 'package:hospitalmanagement_flutter/features/auth/matricula_screen.dart';
 import 'package:hospitalmanagement_flutter/features/auth/splash_screen.dart';
 import 'package:hospitalmanagement_flutter/features/home/dashboard.dart';
+import 'package:hospitalmanagement_flutter/features/logistica/logistica_screen.dart';
 import 'package:hospitalmanagement_flutter/services/database.dart';
 import 'package:hospitalmanagement_flutter/services/ia_service.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +39,10 @@ Future<void> main() async {
           ),
         ),
 
+        ChangeNotifierProvider<LogisticaStore>(
+          create: ((context) => LogisticaStore()),
+        ),
+
         ChangeNotifierProvider<IaStore>(
           create: (context) => IaStore(
             estoqueStore: Provider.of<EstoqueStore>(context, listen: false),
@@ -68,6 +73,7 @@ class MyApp extends StatelessWidget {
         '/ia': (context) => const IaScreen(),
         '/estoque': (context) => const EstoqueScreen(),
         '/alertas': (context) => const AlertasScreen(),
+        '/logistica': (context) => const LogisticaScreen()
       },
     );
   }

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../ai/ai_screen.dart';
 import '../alertas/alertas_screen.dart';
 import '../estoque/estoque_screen.dart';
+import '../logistica/logistica_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -24,8 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     AlertasScreen(),
     EstoqueScreen(),
     IaScreen(),
-    Center(child: Text('Logística em breve', style: TextStyle(color: Colors.white))), // Índice 4
-    // LogisticaScreen(),
+    LogisticaScreen(),
   ];
 
   @override
