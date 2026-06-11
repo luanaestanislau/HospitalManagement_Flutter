@@ -100,7 +100,7 @@ class _EstoqueScreenState extends State<EstoqueScreen> {
                     const SizedBox(width: 8),
                     _Chip('Essencial IA', 'essencial_ia', _filtroStatus,
                             () => setState(() => _filtroStatus = 'essencial_ia'),
-                        cor: AppTheme.blue600),
+                        cor: AppTheme.purple600),
                     const SizedBox(width: 8),
                     _Chip('Vencendo', 'vencendo', _filtroStatus,
                             () => setState(() => _filtroStatus = 'vencendo'),
@@ -243,7 +243,7 @@ class _EstoqueScreenState extends State<EstoqueScreen> {
                     onPressed: () {},
                     child: Text(
                       'Ver todos os ${store.totalItens} itens',
-                      style: const TextStyle(color: AppTheme.blue600, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.purple600, fontSize: 13),
                     ),
                   ),
                 ),
@@ -700,8 +700,17 @@ class _AdicionarItemSheetState extends State<_AdicionarItemSheet> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.purple600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               onPressed: () => Navigator.pop(context),
-              child: const Text('Adicionar item'),
+              child: const Text('Adicionar item',
+              style: TextStyle(color: AppTheme.purple50),
+              ),
             ),
           ),
         ],
@@ -724,16 +733,16 @@ class _TipoOpcao extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selecionado ? AppTheme.blue50 : Colors.grey.shade100,
+          color: selecionado ? AppTheme.purple50 : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-              color: selecionado ? AppTheme.blue600 : Colors.grey.shade300,
+              color: selecionado ? AppTheme.purple600 : Colors.grey.shade300,
               width: selecionado ? 1.5 : 0.5),
         ),
         child: Text(label,
             style: TextStyle(
                 fontSize: 12,
-                color: selecionado ? AppTheme.blue600 : Colors.grey.shade700,
+                color: selecionado ? AppTheme.purple600 : Colors.grey.shade700,
                 fontWeight: selecionado ? FontWeight.w500 : FontWeight.normal)),
       ),
     );

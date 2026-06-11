@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     // final alertasStore = context.watch<AlertasStore>();
-    // final estoqueStore = context.watch<EstoqueStore>();
+    final estoqueStore = context.watch<EstoqueStore>();
     final iaStore = context.watch<IaStore>();
     // final logisticaStore = context.watch<LogisticaStore>();
     final usuario = context.read<AuthStore>().usuario;
@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // await estoqueStore.carregar();
+          await estoqueStore.carregar();
           // alertasStore.gerarAlertas();
         },
         child: ListView(
@@ -148,13 +148,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Divider(height: 20, thickness: 1, color: Colors.white.withOpacity(0.1),),
 
-            // ── Stats rápidos ──
+
             Row(
               children: [
                 Expanded(
                   child: _StatCard(
-                    // valor: '${estoqueStore.totalItens}',
-                    valor: '...',
+                    valor: '${estoqueStore.totalItens}',
                     label: 'Itens em estoque',
                     backcor: AppTheme.coral50,
                     cor: Colors.black87,
@@ -163,8 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StatCard(
-                    // valor: '${estoqueStore.totalCriticos}',
-                    valor: '...',
+                    valor: '${estoqueStore.totalCriticos}',
                     label: 'Críticos',
                     backcor: AppTheme.red100,
                     cor: AppTheme.red600,
@@ -202,8 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            // '${estoqueStore.itensEssenciaisBaixaDemanda.length} itens essenciais com cálculo pendente',
-                            '... itens essenciais com cálculo pendente',
+                            '${estoqueStore.itensEssenciaisBaixaDemanda.length} itens essenciais com cálculo pendente',
                             style: TextStyle(fontSize: 12, color: Colors.white),
                           ),
                           if (iaStore.scoreResiliencia > 0) ...[
@@ -283,16 +280,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// double? _calcularProgresso(
-//     Map<String, dynamic> alerta, EstoqueStore store) {
-//   final itemId = alerta['item_id'];
-//   if (itemId == null) return null;
-//   final item = store.itens.where((i) => i['id'] == itemId).firstOrNull;
-//   if (item == null) return null;
-//   final atual = item['quantidade_atual'] as int;
-//   final max = (item['quantidade_minima'] as int) * 3;
-//   return (atual / max).clamp(0.0, 1.0);
-// }
+double? _calcularProgresso(
+    Map<String, dynamic> alerta, EstoqueStore store) {
+  final itemId = alerta['item_id'];
+  if (itemId == null) return null;
+  final item = store.itens.where((i) => i['id'] == itemId).firstOrNull;
+  if (item == null) return null;
+  final atual = item['quantidade_atual'] as int;
+  final max = (item['quantidade_minima'] as int) * 3;
+  return (atual / max).clamp(0.0, 1.0);
+}
 }
 
 class _StatCard extends StatelessWidget {
@@ -432,4 +429,3 @@ class _ItemPerfil extends StatelessWidget {
     );
   }
 }
-//teste

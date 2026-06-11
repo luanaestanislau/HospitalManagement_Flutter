@@ -9,6 +9,7 @@ import 'package:hospitalmanagement_flutter/services/ia_service.dart';
 import 'package:provider/provider.dart';
 import 'package:hospitalmanagement_flutter/features/auth/login_screen.dart';
 import 'package:hospitalmanagement_flutter/stores/stores.dart';
+import 'features/estoque/estoque_screen.dart';
 import 'firebase_options.dart';
 
 import 'features/auth/cadastro_screen.dart';
@@ -60,6 +61,7 @@ class MyApp extends StatelessWidget {
         '/matricula' : (context) => const MatriculaScreen(),
         '/home' : (context) => const DashboardScreen(),
         '/ia': (context) => const IaScreen(),
+        '/estoque': (context) => const EstoqueScreen(),
       },
     );
   }

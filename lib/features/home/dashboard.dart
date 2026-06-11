@@ -6,6 +6,7 @@ import 'package:hospitalmanagement_flutter/widgets/app_widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../ai/ai_screen.dart';
+import '../estoque/estoque_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,8 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     HomeScreen(),
     Center(child: Text('Alertas em breve', style: TextStyle(color: Colors.white))), // Índice 1
     // AlertasScreen(),
-    Center(child: Text('Estoque em breve', style: TextStyle(color: Colors.white))), // Índice 2
-    // EstoqueScreen(),
+    EstoqueScreen(),
     IaScreen(),
     Center(child: Text('Logística em breve', style: TextStyle(color: Colors.white))), // Índice 4
     // LogisticaScreen(),

@@ -1021,7 +1021,7 @@ class _CenariosPreventivos extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-        OutlinedButton.icon(
+         OutlinedButton.icon(
           onPressed: onSimularEvento,
           icon: const Icon(Icons.play_circle_outline, size: 18),
           label: const Text('Simular evento em andamento'),
