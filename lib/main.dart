@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hospitalmanagement_flutter/features/ai/ai_screen.dart';
+import 'package:hospitalmanagement_flutter/features/alertas/alertas_screen.dart';
 import 'package:hospitalmanagement_flutter/features/auth/matricula_screen.dart';
 import 'package:hospitalmanagement_flutter/features/auth/splash_screen.dart';
 import 'package:hospitalmanagement_flutter/features/home/dashboard.dart';
@@ -25,12 +26,16 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Adicione todas as Stores necessárias aqui
         Provider<AuthStore>(create: (_) => AuthStore()),
 
-        // Use ChangeNotifierProvider para stores que usam notifyListeners()
         ChangeNotifierProvider<EstoqueStore>(
           create: (_) => EstoqueStore(database: dbService, ia: iaService),
+        ),
+
+        ChangeNotifierProvider<AlertasStore>(
+          create: (context) => AlertasStore(
+            estoqueStore: Provider.of<EstoqueStore>(context, listen: false),
+          ),
         ),
 
         ChangeNotifierProvider<IaStore>(
@@ -62,6 +67,7 @@ class MyApp extends StatelessWidget {
         '/home' : (context) => const DashboardScreen(),
         '/ia': (context) => const IaScreen(),
         '/estoque': (context) => const EstoqueScreen(),
+        '/alertas': (context) => const AlertasScreen(),
       },
     );
   }

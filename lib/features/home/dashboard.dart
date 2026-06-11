@@ -6,6 +6,7 @@ import 'package:hospitalmanagement_flutter/widgets/app_widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../ai/ai_screen.dart';
+import '../alertas/alertas_screen.dart';
 import '../estoque/estoque_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -20,8 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<Widget> _telas = const [
     HomeScreen(),
-    Center(child: Text('Alertas em breve', style: TextStyle(color: Colors.white))), // Índice 1
-    // AlertasScreen(),
+    AlertasScreen(),
     EstoqueScreen(),
     IaScreen(),
     Center(child: Text('Logística em breve', style: TextStyle(color: Colors.white))), // Índice 4

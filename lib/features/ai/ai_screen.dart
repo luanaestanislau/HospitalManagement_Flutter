@@ -1151,7 +1151,6 @@ class _MiniInfo extends StatelessWidget {
   }
 }
 
-// ── Estado 2: Evento em andamento ─────────────────────────────────────────────
 class _EventoAtivo extends StatelessWidget {
   final VoidCallback onResolver;
 

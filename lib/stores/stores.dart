@@ -128,66 +128,66 @@ abstract class _AuthStoreBase with Store {
   }
 }
 
-// class AlertasStore extends ChangeNotifier {
-//   final EstoqueStore estoqueStore;
-//
-//   List<Map<String, dynamic>> _alertas = [];
-//
-//   AlertasStore({required this.estoqueStore});
-//
-//   List<Map<String, dynamic>> get alertas => _alertas;
-//   List<Map<String, dynamic>> get alertasCriticos =>
-//       _alertas.where((a) => a['prioridade'] == 'critico').toList();
-//   List<Map<String, dynamic>> get alertasAtencao =>
-//       _alertas.where((a) => a['prioridade'] == 'atencao').toList();
-//   int get totalCriticos => alertasCriticos.length;
-//
-//   void gerarAlertas() {
-//     _alertas = [];
-//     for (final item in estoqueStore.itensCriticos) {
-//       _alertas.add({
-//         'id': item['id'],
-//         'tipo': 'estoque_critico',
-//         'titulo': item['nome'],
-//         'descricao': 'Qtd: ${item['quantidade_atual']} · Mín: ${item['quantidade_minima']}',
-//         'prioridade': 'critico',
-//         'item_id': item['id'],
-//         'acoes': ['Repor', 'Ver', 'Redistribuir'],
-//       });
-//     }
-//     notifyListeners();
-//   }
-//
-//   void carregarMock() {
-//     _alertas = [
-//       {
-//         'id': 1, 'tipo': 'estoque_critico', 'prioridade': 'critico',
-//         'titulo': 'Soro Fisiológico 500ml',
-//         'descricao': 'Qtd: 18 un · Mín: 100 · Setor: UTI',
-//         'item_id': 1, 'acoes': ['Repor', 'Ver', 'Redistribuir'],
-//       },
-//       {
-//         'id': 2, 'tipo': 'estoque_critico', 'prioridade': 'critico',
-//         'titulo': 'Luva Estéril P',
-//         'descricao': 'Qtd: 5 cx · Mín: 30 · Setor: CC',
-//         'item_id': 3, 'acoes': ['Repor', 'Rastrear'],
-//       },
-//       {
-//         'id': 3, 'tipo': 'validade', 'prioridade': 'atencao',
-//         'titulo': 'Seringa 5ml',
-//         'descricao': 'Lote MN-2024 · Vence em 12 dias',
-//         'item_id': 2, 'acoes': ['Descartar', 'Redistribuir'],
-//       },
-//       {
-//         'id': 4, 'tipo': 'atraso_entrega', 'prioridade': 'atencao',
-//         'titulo': 'Entrega #OG38 atrasada',
-//         'descricao': 'ForneceMed · SLA excedido em 2h',
-//         'pedido_id': 38, 'acoes': ['Rastrear', 'Contatar'],
-//       },
-//     ];
-//     notifyListeners();
-//   }
-// }
+class AlertasStore extends ChangeNotifier {
+  final EstoqueStore estoqueStore;
+
+  List<Map<String, dynamic>> _alertas = [];
+
+  AlertasStore({required this.estoqueStore});
+
+  List<Map<String, dynamic>> get alertas => _alertas;
+  List<Map<String, dynamic>> get alertasCriticos =>
+      _alertas.where((a) => a['prioridade'] == 'critico').toList();
+  List<Map<String, dynamic>> get alertasAtencao =>
+      _alertas.where((a) => a['prioridade'] == 'atencao').toList();
+  int get totalCriticos => alertasCriticos.length;
+
+  void gerarAlertas() {
+    _alertas = [];
+    for (final item in estoqueStore.itensCriticos) {
+      _alertas.add({
+        'id': item['id'],
+        'tipo': 'estoque_critico',
+        'titulo': item['nome'],
+        'descricao': 'Qtd: ${item['quantidade_atual']} · Mín: ${item['quantidade_minima']}',
+        'prioridade': 'critico',
+        'item_id': item['id'],
+        'acoes': ['Repor', 'Ver', 'Redistribuir'],
+      });
+    }
+    notifyListeners();
+  }
+
+  void carregarMock() {
+    _alertas = [
+      {
+        'id': 1, 'tipo': 'estoque_critico', 'prioridade': 'critico',
+        'titulo': 'Soro Fisiológico 500ml',
+        'descricao': 'Qtd: 18 un · Mín: 100 · Setor: UTI',
+        'item_id': 1, 'acoes': ['Repor', 'Ver', 'Redistribuir'],
+      },
+      {
+        'id': 2, 'tipo': 'estoque_critico', 'prioridade': 'critico',
+        'titulo': 'Luva Estéril P',
+        'descricao': 'Qtd: 5 cx · Mín: 30 · Setor: CC',
+        'item_id': 3, 'acoes': ['Repor', 'Rastrear'],
+      },
+      {
+        'id': 3, 'tipo': 'validade', 'prioridade': 'atencao',
+        'titulo': 'Seringa 5ml',
+        'descricao': 'Lote MN-2024 · Vence em 12 dias',
+        'item_id': 2, 'acoes': ['Descartar', 'Redistribuir'],
+      },
+      {
+        'id': 4, 'tipo': 'atraso_entrega', 'prioridade': 'atencao',
+        'titulo': 'Entrega #OG38 atrasada',
+        'descricao': 'ForneceMed · SLA excedido em 2h',
+        'pedido_id': 38, 'acoes': ['Rastrear', 'Contatar'],
+      },
+    ];
+    notifyListeners();
+  }
+}
 
 class EstoqueStore extends ChangeNotifier {
   final DatabaseService database;
