@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "86977094632",
+    "project_id": "hospitalmanagementflutter",
+    "storage_bucket": "hospitalmanagementflutter.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:86977094632:android:7c3d99770094643ce27a5d",
+        "android_client_info": {
+          "package_name": "br.com.fiap.hospitalmanagement_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjjniWbiTmBMz97-Au-boPEdvfRgP7TUk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
