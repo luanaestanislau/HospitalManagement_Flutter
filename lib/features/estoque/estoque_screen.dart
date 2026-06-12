@@ -272,7 +272,7 @@ class _Chip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? (cor ?? AppTheme.blue600) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? (cor ?? AppTheme.blue600) : Colors.white.withOpacity(0.2),
           ),
@@ -639,81 +639,88 @@ class _AdicionarItemSheetState extends State<_AdicionarItemSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+        border: Border.all(color: Color(0xFF1E1E1E), width: 0.5),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Novo item de estoque',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _nomeCtrl,
-            decoration: const InputDecoration(labelText: 'Nome do item'),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _qtdCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Qtd atual'),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Novo item de estoque',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _nomeCtrl,
+              decoration: const InputDecoration(labelText: 'Nome do item'),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _qtdCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Qtd atual'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _minCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Qtd mínima'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _minCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Qtd mínima'),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text('Tipo',
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              _TipoOpcao(
-                label: 'Primordial',
-                selecionado: _tipo == 'primordial',
-                onTap: () => setState(() => _tipo = 'primordial'),
-              ),
-              const SizedBox(width: 10),
-              _TipoOpcao(
-                label: 'Essencial / Baixa demanda',
-                selecionado: _tipo == 'essencial_baixa_demanda',
-                onTap: () => setState(() => _tipo = 'essencial_baixa_demanda'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.purple600,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text('Tipo',
+                style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                _TipoOpcao(
+                  label: 'Primordial',
+                  selecionado: _tipo == 'primordial',
+                  onTap: () => setState(() => _tipo = 'primordial'),
                 ),
-              ),
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Adicionar item',
-              style: TextStyle(color: AppTheme.purple50),
+                const SizedBox(width: 10),
+                _TipoOpcao(
+                  label: 'Essencial / Baixa demanda',
+                  selecionado: _tipo == 'essencial_baixa_demanda',
+                  onTap: () => setState(() => _tipo = 'essencial_baixa_demanda'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.purple600,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Adicionar item',
+                style: TextStyle(color: AppTheme.purple50),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -181,7 +181,6 @@ class _AbaEntregasState extends State<_AbaEntregas> {
 
     return Column(
       children: [
-
         Container(
           color: const Color(0xFF1E1E1E),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

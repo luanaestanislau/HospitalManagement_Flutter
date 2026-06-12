@@ -33,7 +33,9 @@ class _AlertasScreenState extends State<AlertasScreen> {
         shape: Border(
           bottom: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
         ),
-        title: const Text('Alertas', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: const Text(
+          'Alertas',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           if (store.totalCriticos > 0)
@@ -51,49 +53,51 @@ class _AlertasScreenState extends State<AlertasScreen> {
       body: Column(
         children: [
           Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              border: Border(
-                bottom: BorderSide(
+            color: const Color(0xFF1E1E1E),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
                   color: Colors.white.withOpacity(0.1),
-                  width: 1,
+                  width: 0.5,
                 ),
               ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                _FiltroChip(
-                  label: 'Todos',
-                  ativo: _filtro == 'todos',
-                  count: store.alertas.length,
-                  onTap: () => setState(() => _filtro = 'todos'),
-                ),
-                const SizedBox(width: 8),
-                _FiltroChip(
-                  label: 'Críticos',
-                  ativo: _filtro == 'critico',
-                  count: store.totalCriticos,
-                  tipo: AppBadgeType.critico,
-                  onTap: () => setState(() => _filtro = 'critico'),
-                ),
-                const SizedBox(width: 8),
-                _FiltroChip(
-                  label: 'Atenção',
-                  ativo: _filtro == 'atencao',
-                  count: store.alertasAtencao.length,
-                  tipo: AppBadgeType.atencao,
-                  onTap: () => setState(() => _filtro = 'atencao'),
-                ),
-                const SizedBox(width: 8),
-                _FiltroChip(
-                  label: 'Info',
-                  ativo: _filtro == 'info',
-                  count: 0,
-                  onTap: () => setState(() => _filtro = 'info'),
-                ),
-              ],
+              padding: const EdgeInsets.all(3),
+              child: Row(
+                children: [
+                  _FiltroChip(
+                    label: 'Todos',
+                    ativo: _filtro == 'todos',
+                    count: store.alertas.length,
+                    onTap: () => setState(() => _filtro = 'todos'),
+                  ),
+                  const SizedBox(width: 8),
+                  _FiltroChip(
+                    label: 'Críticos',
+                    ativo: _filtro == 'critico',
+                    count: store.totalCriticos,
+                    tipo: AppBadgeType.critico,
+                    onTap: () => setState(() => _filtro = 'critico'),
+                  ),
+                  const SizedBox(width: 8),
+                  _FiltroChip(
+                    label: 'Atenção',
+                    ativo: _filtro == 'atencao',
+                    count: store.alertasAtencao.length,
+                    tipo: AppBadgeType.atencao,
+                    onTap: () => setState(() => _filtro = 'atencao'),
+                  ),
+                  const SizedBox(width: 8),
+                  _FiltroChip(
+                    label: 'Info',
+                    ativo: _filtro == 'info',
+                    count: 0,
+                    onTap: () => setState(() => _filtro = 'info'),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -101,13 +105,13 @@ class _AlertasScreenState extends State<AlertasScreen> {
             child: alertasFiltrados.isEmpty
                 ? _Empty(filtro: _filtro)
                 : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: alertasFiltrados.length,
-              itemBuilder: (_, i) {
-                final a = alertasFiltrados[i];
-                return _AlertaItem(alerta: a);
-              },
-            ),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: alertasFiltrados.length,
+                    itemBuilder: (_, i) {
+                      final a = alertasFiltrados[i];
+                      return _AlertaItem(alerta: a);
+                    },
+                  ),
           ),
         ],
       ),
@@ -117,6 +121,7 @@ class _AlertasScreenState extends State<AlertasScreen> {
 
 class _AlertaItem extends StatelessWidget {
   final Map<String, dynamic> alerta;
+
   const _AlertaItem({required this.alerta});
 
   @override
@@ -155,16 +160,22 @@ class _AlertaItem extends StatelessWidget {
       badgeLabel: badgeLabel,
       progressoPercent: progresso,
       acoes: (alerta['acoes'] as List<String>? ?? [])
-          .map((ac) => AlertaAcao(
-        label: ac,
-        primaria: ac == 'Repor',
-        onTap: () => _executarAcao(context, ac, alerta),
-      ))
+          .map(
+            (ac) => AlertaAcao(
+              label: ac,
+              primaria: ac == 'Repor',
+              onTap: () => _executarAcao(context, ac, alerta),
+            ),
+          )
           .toList(),
     );
   }
 
-  void _executarAcao(BuildContext ctx, String acao, Map<String, dynamic> alerta) {
+  void _executarAcao(
+    BuildContext ctx,
+    String acao,
+    Map<String, dynamic> alerta,
+  ) {
     switch (acao) {
       case 'Repor':
         ScaffoldMessenger.of(ctx).showSnackBar(
@@ -199,49 +210,57 @@ class _FiltroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: ativo ? AppTheme.purple600 : Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: ativo ? AppTheme.purple600 : Colors.white.withOpacity(0.1),
-            width: 0.5,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: ativo ? AppTheme.purple600 : Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: ativo
+                ? [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1))
+            ]
+                : [],
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: ativo ? Colors.white : Colors.grey.shade400,
-              ),
-            ),
-            if (count > 0) ...[
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: ativo ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: ativo ? FontWeight.w500 : FontWeight.normal,
+                  color: ativo ? AppTheme.purple50 : Colors.grey.shade500,
                 ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: ativo ? Colors.white : Colors.grey.shade400,
+              ),
+              if (count > 0) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: ativo
+                        ? AppTheme.purple600
+                        : Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: ativo ? Colors.white : Colors.grey.shade400,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -250,6 +269,7 @@ class _FiltroChip extends StatelessWidget {
 
 class _Empty extends StatelessWidget {
   final String filtro;
+
   const _Empty({required this.filtro});
 
   @override
@@ -261,7 +281,9 @@ class _Empty extends StatelessWidget {
           Icon(Icons.check_circle_outline, size: 48, color: AppTheme.green600),
           const SizedBox(height: 12),
           Text(
-            filtro == 'todos' ? 'Nenhum alerta ativo' : 'Nenhum alerta nesta categoria',
+            filtro == 'todos'
+                ? 'Nenhum alerta ativo'
+                : 'Nenhum alerta nesta categoria',
             style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
         ],

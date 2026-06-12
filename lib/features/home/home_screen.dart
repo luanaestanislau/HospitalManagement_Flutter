@@ -27,10 +27,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final alertasStore = context.watch<AlertasStore>();
+    final alertasStore = context.watch<AlertasStore>();
     final estoqueStore = context.watch<EstoqueStore>();
     final iaStore = context.watch<IaStore>();
-    // final logisticaStore = context.watch<LogisticaStore>();
+    final logisticaStore = context.watch<LogisticaStore>();
     final usuario = context.read<AuthStore>().usuario;
 
     final iniciais = usuario?['nome']
@@ -56,29 +56,29 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           CircleAvatar(backgroundColor: Color(0xFFFFCDD2), radius: 15, child: Icon(Icons.circle, color: Colors.red, size: 12)),
           SizedBox(width: 8),
-          // if (alertasStore.totalCriticos > 0)
-          //   Padding(
-          //     padding: const EdgeInsets.only(right: 4),
-          //     child: Center(
-          //       child: Container(
-          //         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          //         decoration: BoxDecoration(
-          //           color: AppTheme.red50,
-          //           borderRadius: BorderRadius.circular(20),
-          //           border: Border.all(color: AppTheme.red200),
-          //         ),
-          //         child: Row(
-          //           children: [
-          //             const Icon(Icons.circle, size: 6, color: AppTheme.red400),
-          //             const SizedBox(width: 4),
-          //             Text('${alertasStore.totalCriticos} críticos',
-          //                 style: const TextStyle(
-          //                     fontSize: 11, color: AppTheme.red600, fontWeight: FontWeight.w500)),
-          //           ],
-          //         ),
-          //       ),
-          //     ),
-          //   ),
+          if (alertasStore.totalCriticos > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.red50,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppTheme.red200),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.circle, size: 6, color: AppTheme.red400),
+                      const SizedBox(width: 4),
+                      Text('${alertasStore.totalCriticos} críticos',
+                          style: const TextStyle(
+                              fontSize: 11, color: AppTheme.red600, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
           GestureDetector(
             onTap: () => _abrirPerfil(context),
@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           await estoqueStore.carregar();
-          // alertasStore.gerarAlertas();
+          alertasStore.gerarAlertas();
         },
         child: ListView(
 
@@ -116,35 +116,33 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
                 const SizedBox(width: 8),
                 AppBadge(
-                  // label: '${alertasStore.totalCriticos} críticos',
-                    label: '.. críticos',
+                  label: '${alertasStore.totalCriticos} críticos',
                     type: AppBadgeType.critico),
                 const SizedBox(width: 4),
                 AppBadge(
-                  // label: '${alertasStore.alertasAtencao.length} atenção',
-                    label: '.. atenção',
+                  label: '${alertasStore.alertasAtencao.length} atenção',
                     type: AppBadgeType.atencao),
               ],
 
             ),
             const SizedBox(height: 5),
-            // ...alertasStore.alertas.take(2).map((a) => AlertCard(
-            //   titulo: a['titulo'],
-            //   descricao: a['descricao'],
-            //   tipo: a['prioridade'] == 'critico'
-            //       ? AppBadgeType.ritico
-            //       : AppBadgeType.atencao,
-            //   badgeLabel: a['prioridade'].toUpperCase(),
-            //   progressoPercent: a['tipo'] == 'estoque_critico'
-            //       ? _calcularProgresso(a, estoqueStore)
-            //       : null,
-            //   acoes: (a['acoes'] as List<String>)
-            //       .map((ac) => AlertaAcao(
-            //     label: ac,
-            //     primaria: ac == 'Repor',
-            //   ))
-            //       .toList(),
-            // )),
+            ...alertasStore.alertas.take(2).map((a) => AlertCard(
+              titulo: a['titulo'],
+              descricao: a['descricao'],
+              tipo: a['prioridade'] == 'critico'
+                  ? AppBadgeType.critico
+                  : AppBadgeType.atencao,
+              badgeLabel: a['prioridade'].toUpperCase(),
+              progressoPercent: a['tipo'] == 'estoque_critico'
+                  ? _calcularProgresso(a, estoqueStore)
+                  : null,
+              acoes: (a['acoes'] as List<String>)
+                  .map((ac) => AlertaAcao(
+                label: ac,
+                primaria: ac == 'Repor',
+              ))
+                  .toList(),
+            )),
 
             Divider(height: 20, thickness: 1, color: Colors.white.withOpacity(0.1),),
 
@@ -246,26 +244,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.white)),
                               const SizedBox(width: 6),
                               AppBadge(
-                                // label: '${logisticaStore.pedidosEmRota} em rota',
-                                  label: '... em rota',
+                                label: '${logisticaStore.pedidosEmRota} em rota',
                                   type: AppBadgeType.info),
-                              // if (logisticaStore.pedidosAtrasados > 0) ...[
-                              //   const SizedBox(width: 4),
-                              //   AppBadge(
-                              //       // label: '${logisticaStore.pedidosAtrasados} atrasado',
-                              //       label: '... atrasado',
-                              //       type: AppBadgeType.critico),
-                              // ],
+                              if (logisticaStore.pedidosAtrasados > 0) ...[
+                                const SizedBox(width: 4),
+                                AppBadge(
+                                    label: '${logisticaStore.pedidosAtrasados} atrasado',
+                                    type: AppBadgeType.critico),
+                              ],
                             ],
                           ),
                           const SizedBox(height: 4),
-                          // Text(
-                          //   logisticaStore.pedidos
-                          //       .where((p) => p['status'] == 'em_rota')
-                          //       .firstOrNull?['codigo'] ??
-                          //       'Nenhuma entrega em rota',
-                          //   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                          // ),
+                          Text(
+                            logisticaStore.pedidos
+                                .where((p) => p['status'] == 'em_rota')
+                                .firstOrNull?['codigo'] ??
+                                'Nenhuma entrega em rota',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          ),
                         ],
                       ),
                     ),
