@@ -11,25 +11,17 @@ class IaScreen extends StatefulWidget {
   State<IaScreen> createState() => _IaScreenState();
 }
 
-class _IaScreenState extends State<IaScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabCtrl;
+class _IaScreenState extends State<IaScreen> {
+  int _abaAtiva = 0;
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<IaStore>().analisarResiliencia();
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _tabCtrl.dispose();
-    super.dispose();
   }
 
   @override
@@ -39,79 +31,124 @@ class _IaScreenState extends State<IaScreen>
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E1E1E),
         elevation: 0,
-        title: Row(
-          children: [
-            const Text('IA Estratégica',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            // const SizedBox(width: 4),
-            // const AiBadge(),
-          ],
+        title: const Text(
+          'IA Estratégica',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(70),
-          child: Container(
+      ),
+      body: Column(
+        children: [
+          Container(
             color: const Color(0xFF1E1E1E),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 0.5,
+                ),
               ),
               padding: const EdgeInsets.all(3),
-              child: TabBar(
-                controller: _tabCtrl,
-                isScrollable: false,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey.shade500,
-                indicatorSize: TabBarIndicatorSize.label,
-                dividerColor: Colors.transparent,
-                indicator: BoxDecoration(
-                  color: AppTheme.purple600,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                labelStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.normal,
-                ),
-                tabs: const [
-                  Tab(text: 'Essenciais'),
-                  Tab(text: 'Previsão'),
-                  Tab(text: 'Distribuição'),
-                  Tab(text: 'Resiliência'),
+              child: Row(
+                children: [
+                  _IaToggleBtn(
+                    label: 'Essenciais',
+                    ativo: _abaAtiva == 0,
+                    onTap: () => setState(() => _abaAtiva = 0),
+                  ),
+                  const SizedBox(width: 4),
+                  _IaToggleBtn(
+                    label: 'Previsão',
+                    ativo: _abaAtiva == 1,
+                    onTap: () => setState(() => _abaAtiva = 1),
+                  ),
+                  const SizedBox(width: 4),
+                  _IaToggleBtn(
+                    label: 'Distribuição',
+                    ativo: _abaAtiva == 2,
+                    onTap: () => setState(() => _abaAtiva = 2),
+                  ),
+                  const SizedBox(width: 4),
+                  _IaToggleBtn(
+                    label: 'Resiliência',
+                    ativo: _abaAtiva == 3,
+                    onTap: () => setState(() => _abaAtiva = 3),
+                  ),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-        body: TabBarView(
-        controller: _tabCtrl,
-        children: const [
-          _AbaEssenciais(),
-          _AbaPrevisao(),
-          _AbaDistribuicao(),
-          _AbaResiliencia(),
+
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _buildConteudoAba(),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildConteudoAba() {
+    switch (_abaAtiva) {
+      case 0:
+        return const _AbaEssenciais(key: ValueKey(0));
+      case 1:
+        return const _AbaPrevisao(key: ValueKey(1));
+      case 2:
+        return const _AbaDistribuicao(key: ValueKey(2));
+      case 3:
+        return const _AbaResiliencia(key: ValueKey(3));
+      default:
+        return const SizedBox();
+    }
+  }
+}
+
+class _IaToggleBtn extends StatelessWidget {
+  final String label;
+  final bool ativo;
+  final VoidCallback onTap;
+
+  const _IaToggleBtn({
+    required this.label,
+    required this.ativo,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: ativo ? AppTheme.purple600 : Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: ativo ? FontWeight.bold : FontWeight.normal,
+              color: ativo ? Colors.white : Colors.grey.shade500,
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
+//
 class _AbaEssenciais extends StatelessWidget {
-  const _AbaEssenciais();
+  const _AbaEssenciais({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +184,8 @@ class _AbaEssenciais extends StatelessWidget {
           const Center(
             child: Padding(
               padding: EdgeInsets.all(32),
-              child: Text('Nenhum item essencial cadastrado',
+              child: Text(
+                'Nenhum item essencial cadastrado',
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -309,7 +347,7 @@ class _BtnIA extends StatelessWidget {
 }
 
 class _AbaPrevisao extends StatelessWidget {
-  const _AbaPrevisao();
+  const _AbaPrevisao({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +358,11 @@ class _AbaPrevisao extends StatelessWidget {
       children: [
         const Text(
           'Histórico vs. previsão',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -333,9 +375,7 @@ class _AbaPrevisao extends StatelessWidget {
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Colors.white.withOpacity(0.1),
-            ),
+            side: BorderSide(color: Colors.white.withOpacity(0.1)),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
@@ -344,8 +384,9 @@ class _AbaPrevisao extends StatelessWidget {
                 value: store.itensPrimordiais.isNotEmpty
                     ? store.itensPrimordiais.first['nome']
                     : null,
-                hint: const Text('Selecionar item',
-                style: TextStyle(color: Colors.white),
+                hint: const Text(
+                  'Selecionar item',
+                  style: TextStyle(color: Colors.white),
                 ),
                 isExpanded: true,
                 items: store.itens
@@ -371,9 +412,7 @@ class _AbaPrevisao extends StatelessWidget {
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Colors.white.withOpacity(0.1),
-            ),
+            side: BorderSide(color: Colors.white.withOpacity(0.1)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -422,7 +461,11 @@ class _AbaPrevisao extends StatelessWidget {
 
         const Text(
           'Recomendações de reposição',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 10),
         ...store.itens.take(3).map((item) => _RecomendacaoCard(item: item)),
@@ -533,9 +576,7 @@ class _RecomendacaoCard extends StatelessWidget {
       color: const Color(0xFF1E1E1E),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        side: BorderSide(color: Colors.white.withOpacity(0.1)),
       ),
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -576,7 +617,7 @@ class _RecomendacaoCard extends StatelessWidget {
 
 //
 class _AbaDistribuicao extends StatelessWidget {
-  const _AbaDistribuicao();
+  const _AbaDistribuicao({super.key});
 
   static const _hospitais = [
     {
@@ -623,7 +664,6 @@ class _AbaDistribuicao extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-
         Container(
           height: 160,
           decoration: BoxDecoration(
@@ -689,16 +729,18 @@ class _AbaDistribuicao extends StatelessWidget {
 
         const Text(
           'Rede hospitalar',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 10),
         Card(
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Colors.white.withOpacity(0.1),
-            ),
+            side: BorderSide(color: Colors.white.withOpacity(0.1)),
           ),
           child: Column(
             children: _hospitais.asMap().entries.map((e) {
@@ -746,8 +788,10 @@ class _AbaDistribuicao extends StatelessWidget {
                     Expanded(
                       child: Text(
                         h['nome'] as String,
-                        style: const TextStyle(fontSize: 13, color: Colors.white),
-
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     AppBadge(label: badgeLabel, type: badgeType),
@@ -763,7 +807,11 @@ class _AbaDistribuicao extends StatelessWidget {
           children: [
             const Text(
               'Sugestões de redistribuição',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(width: 8),
             const AiBadge(),
@@ -869,7 +917,7 @@ class _SugestaoCard extends StatelessWidget {
 
 //
 class _AbaResiliencia extends StatefulWidget {
-  const _AbaResiliencia();
+  const _AbaResiliencia({super.key});
 
   @override
   State<_AbaResiliencia> createState() => _AbaResilienciaState();
@@ -945,9 +993,7 @@ class _CenariosPreventivos extends StatelessWidget {
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Colors.white.withOpacity(0.1),
-            ),
+            side: BorderSide(color: Colors.white.withOpacity(0.1)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -965,7 +1011,7 @@ class _CenariosPreventivos extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: Colors.white
+                              color: Colors.white,
                             ),
                           ),
                           Text(
@@ -1046,7 +1092,7 @@ class _CenariosPreventivos extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-         OutlinedButton.icon(
+        OutlinedButton.icon(
           onPressed: onSimularEvento,
           icon: const Icon(Icons.play_circle_outline, size: 18),
           label: const Text('Simular evento em andamento'),
