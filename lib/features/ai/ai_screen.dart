@@ -48,31 +48,56 @@ class _IaScreenState extends State<IaScreen>
             // const AiBadge(),
           ],
         ),
-        bottom: TabBar(
-          controller: _tabCtrl,
-          isScrollable: true,
-          labelColor: AppTheme.purple600,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppTheme.purple600,
-          indicatorSize: TabBarIndicatorSize.label,
-          dividerColor: Colors.white.withOpacity(0.1),
-          indicatorWeight: 2,
-          tabAlignment: TabAlignment.center,
-          padding: EdgeInsets.zero,
-          labelStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(70),
+          child: Container(
+            color: const Color(0xFF1E1E1E),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.5),
+              ),
+              padding: const EdgeInsets.all(3),
+              child: TabBar(
+                controller: _tabCtrl,
+                isScrollable: false,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey.shade500,
+                indicatorSize: TabBarIndicatorSize.label,
+                dividerColor: Colors.transparent,
+                indicator: BoxDecoration(
+                  color: AppTheme.purple600,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                labelStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                ),
+                tabs: const [
+                  Tab(text: 'Essenciais'),
+                  Tab(text: 'Previsão'),
+                  Tab(text: 'Distribuição'),
+                  Tab(text: 'Resiliência'),
+                ],
+              ),
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(fontSize: 12),
-          tabs: const [
-            Tab(text: 'Essenciais'),
-            Tab(text: 'Previsão'),
-            Tab(text: 'Distribuição'),
-            Tab(text: 'Resiliência'),
-          ],
         ),
       ),
-      body: TabBarView(
+        body: TabBarView(
         controller: _tabCtrl,
         children: const [
           _AbaEssenciais(),

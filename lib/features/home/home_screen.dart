@@ -20,7 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) => _PerfilSheet(usuario: usuario),
     );
   }
@@ -33,12 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final logisticaStore = context.watch<LogisticaStore>();
     final usuario = context.read<AuthStore>().usuario;
 
-    final iniciais = usuario?['nome']
-        ?.toString()
-        .split(' ')
-        .take(2)
-        .map((n) => n[0])
-        .join() ??
+    final iniciais =
+        usuario?['nome']
+            ?.toString()
+            .split(' ')
+            .take(2)
+            .map((n) => n[0])
+            .join() ??
         'AS';
 
     return Scaffold(
@@ -54,14 +56,21 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
-          CircleAvatar(backgroundColor: Color(0xFFFFCDD2), radius: 15, child: Icon(Icons.circle, color: Colors.red, size: 12)),
+          CircleAvatar(
+            backgroundColor: Color(0xFFFFCDD2),
+            radius: 15,
+            child: Icon(Icons.circle, color: Colors.red, size: 12),
+          ),
           SizedBox(width: 8),
           if (alertasStore.totalCriticos > 0)
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.red50,
                     borderRadius: BorderRadius.circular(20),
@@ -71,9 +80,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Icon(Icons.circle, size: 6, color: AppTheme.red400),
                       const SizedBox(width: 4),
-                      Text('${alertasStore.totalCriticos} críticos',
-                          style: const TextStyle(
-                              fontSize: 11, color: AppTheme.red600, fontWeight: FontWeight.w500)),
+                      Text(
+                        '${alertasStore.totalCriticos} críticos',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.red600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -92,9 +106,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 border: Border.all(color: AppTheme.purple200),
               ),
               child: Center(
-                child: Text(iniciais,
-                    style: const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w500, color: AppTheme.purple800)),
+                child: Text(
+                  iniciais,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.purple800,
+                  ),
+                ),
               ),
             ),
           ),
@@ -106,46 +125,59 @@ class _HomeScreenState extends State<HomeScreen> {
           alertasStore.gerarAlertas();
         },
         child: ListView(
-
           padding: const EdgeInsets.all(16),
           children: [
             // ── Alertas ativos (prioridade máxima) ──
             Row(
               children: [
-                const Text('Alertas ativos',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
+                const Text(
+                  'Alertas ativos',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 AppBadge(
                   label: '${alertasStore.totalCriticos} críticos',
-                    type: AppBadgeType.critico),
+                  type: AppBadgeType.critico,
+                ),
                 const SizedBox(width: 4),
                 AppBadge(
                   label: '${alertasStore.alertasAtencao.length} atenção',
-                    type: AppBadgeType.atencao),
+                  type: AppBadgeType.atencao,
+                ),
               ],
-
             ),
             const SizedBox(height: 5),
-            ...alertasStore.alertas.take(2).map((a) => AlertCard(
-              titulo: a['titulo'],
-              descricao: a['descricao'],
-              tipo: a['prioridade'] == 'critico'
-                  ? AppBadgeType.critico
-                  : AppBadgeType.atencao,
-              badgeLabel: a['prioridade'].toUpperCase(),
-              progressoPercent: a['tipo'] == 'estoque_critico'
-                  ? _calcularProgresso(a, estoqueStore)
-                  : null,
-              acoes: (a['acoes'] as List<String>)
-                  .map((ac) => AlertaAcao(
-                label: ac,
-                primaria: ac == 'Repor',
-              ))
-                  .toList(),
-            )),
+            ...alertasStore.alertas
+                .take(2)
+                .map(
+                  (a) => AlertCard(
+                    titulo: a['titulo'],
+                    descricao: a['descricao'],
+                    tipo: a['prioridade'] == 'critico'
+                        ? AppBadgeType.critico
+                        : AppBadgeType.atencao,
+                    badgeLabel: a['prioridade'].toUpperCase(),
+                    progressoPercent: a['tipo'] == 'estoque_critico'
+                        ? _calcularProgresso(a, estoqueStore)
+                        : null,
+                    acoes: (a['acoes'] as List<String>)
+                        .map(
+                          (ac) =>
+                              AlertaAcao(label: ac, primaria: ac == 'Repor'),
+                        )
+                        .toList(),
+                  ),
+                ),
 
-            Divider(height: 20, thickness: 1, color: Colors.white.withOpacity(0.1),),
-
+            Divider(
+              height: 20,
+              thickness: 1,
+              color: Colors.white.withOpacity(0.1),
+            ),
 
             Row(
               children: [
@@ -175,9 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: const Color(0xFF1E1E1E),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Colors.white.withOpacity(0.1),
-                ),
+                side: BorderSide(color: Colors.white.withOpacity(0.1)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -189,9 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Row(
                             children: [
-                              const Text('IA Estratégica',
-                                  style: TextStyle(
-                                      fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white)),
+                              const Text(
+                                'IA Estratégica',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
                               const SizedBox(width: 6),
                               const AiBadge(),
                             ],
@@ -206,7 +241,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               'Resiliência: ${iaStore.scoreResiliencia}/100',
                               style: const TextStyle(
-                                  fontSize: 12, color: AppTheme.amber600),
+                                fontSize: 12,
+                                color: AppTheme.amber600,
+                              ),
                             ),
                           ],
                         ],
@@ -224,9 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: const Color(0xFF1E1E1E),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Colors.white.withOpacity(0.1),
-                ),
+                side: BorderSide(color: Colors.white.withOpacity(0.1)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -238,29 +273,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Row(
                             children: [
-                              const Text('Entregas hoje',
-                                  style: TextStyle(
-                                      fontSize: 13, fontWeight: FontWeight.w500,
-                                  color: Colors.white)),
+                              const Text(
+                                'Entregas hoje',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
                               const SizedBox(width: 6),
                               AppBadge(
-                                label: '${logisticaStore.pedidosEmRota} em rota',
-                                  type: AppBadgeType.info),
+                                label:
+                                    '${logisticaStore.pedidosEmRota} em rota',
+                                type: AppBadgeType.info,
+                              ),
                               if (logisticaStore.pedidosAtrasados > 0) ...[
                                 const SizedBox(width: 4),
                                 AppBadge(
-                                    label: '${logisticaStore.pedidosAtrasados} atrasado',
-                                    type: AppBadgeType.critico),
+                                  label:
+                                      '${logisticaStore.pedidosAtrasados} atrasado',
+                                  type: AppBadgeType.critico,
+                                ),
                               ],
                             ],
                           ),
                           const SizedBox(height: 4),
                           Text(
                             logisticaStore.pedidos
-                                .where((p) => p['status'] == 'em_rota')
-                                .firstOrNull?['codigo'] ??
+                                    .where((p) => p['status'] == 'em_rota')
+                                    .firstOrNull?['codigo'] ??
                                 'Nenhuma entrega em rota',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
                         ],
                       ),
@@ -276,16 +322,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-double? _calcularProgresso(
-    Map<String, dynamic> alerta, EstoqueStore store) {
-  final itemId = alerta['item_id'];
-  if (itemId == null) return null;
-  final item = store.itens.where((i) => i['id'] == itemId).firstOrNull;
-  if (item == null) return null;
-  final atual = item['quantidade_atual'] as int;
-  final max = (item['quantidade_minima'] as int) * 3;
-  return (atual / max).clamp(0.0, 1.0);
-}
+  double? _calcularProgresso(Map<String, dynamic> alerta, EstoqueStore store) {
+    final itemId = alerta['item_id'];
+    if (itemId == null) return null;
+    final item = store.itens.where((i) => i['id'] == itemId).firstOrNull;
+    if (item == null) return null;
+    final atual = item['quantidade_atual'] as int;
+    final max = (item['quantidade_minima'] as int) * 3;
+    return (atual / max).clamp(0.0, 1.0);
+  }
 }
 
 class _StatCard extends StatelessWidget {
@@ -294,7 +339,12 @@ class _StatCard extends StatelessWidget {
   final Color cor;
   final Color backcor;
 
-  const _StatCard({required this.valor, required this.label, required this.cor, required this.backcor});
+  const _StatCard({
+    required this.valor,
+    required this.label,
+    required this.cor,
+    required this.backcor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -307,10 +357,19 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(valor,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: cor)),
+          Text(
+            valor,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
+              color: cor,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          ),
         ],
       ),
     );
@@ -320,89 +379,138 @@ class _StatCard extends StatelessWidget {
 //Perfil
 class _PerfilSheet extends StatelessWidget {
   final Map<String, dynamic>? usuario;
+
   const _PerfilSheet({this.usuario});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        border: Border.all(color: Color(0xFF1E1E1E), width: 0.5),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.purple50,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.purple200),
-                ),
-                child: Center(
-                  child: Text(
-                    usuario?['nome']?.toString().split(' ').take(2).map((n) => n[0]).join() ?? 'AS',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w500, color: AppTheme.purple800),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.purple50,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.purple200),
+                  ),
+                  child: Center(
+                    child: Text(
+                      usuario?['nome']
+                              ?.toString()
+                              .split(' ')
+                              .take(2)
+                              .map((n) => n[0])
+                              .join() ??
+                          'AS',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.purple800,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(usuario?['nome'] ?? 'Usuário',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                    Text(usuario?['cargo'] ?? '',
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                    Text('${usuario?['hospital'] ?? ''} · ${usuario?['registro'] ?? ''}',
-                        style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-                  ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        usuario?['nome'] ?? 'Usuário',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        usuario?['cargo'] ?? '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      Text(
+                        '${usuario?['hospital'] ?? ''} · ${usuario?['registro'] ?? ''}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const Divider(height: 28),
-          _ItemPerfil(icon: Icons.notifications_outlined, label: 'Notificações e alertas'),
-          _ItemPerfil(icon: Icons.history_outlined, label: 'Auditoria de IA'),
-          _ItemPerfil(icon: Icons.lock_outlined, label: 'Controle de acesso (LGPD)'),
-          _ItemPerfil(
-            icon: Icons.cloud_done_outlined,
-            label: 'Sincronização Firebase',
-            trailing: const AppBadge(label: 'Online', type: AppBadgeType.normal),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {
-                context.read<AuthStore>().logout();
-                if (!context.mounted) return;
-                Navigator.pushNamedAndRemoveUntil(context, '/intro', (_) => false);
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.red600,
-                side: const BorderSide(color: AppTheme.red200),
-              ),
-              child: const Text('Sair da conta'),
+              ],
             ),
-          ),
-        ],
+            const Divider(height: 28),
+            _ItemPerfil(
+              icon: Icons.notifications_outlined,
+              label: 'Notificações e alertas',
+            ),
+            _ItemPerfil(icon: Icons.history_outlined, label: 'Auditoria de IA'),
+            _ItemPerfil(
+              icon: Icons.lock_outlined,
+              label: 'Controle de acesso (LGPD)',
+            ),
+            _ItemPerfil(
+              icon: Icons.cloud_done_outlined,
+              label: 'Sincronização Firebase',
+              trailing: const AppBadge(
+                label: 'Online',
+                type: AppBadgeType.normal,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  context.read<AuthStore>().logout();
+                  if (!context.mounted) return;
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/intro',
+                    (_) => false,
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.red600,
+                  side: const BorderSide(color: AppTheme.red200),
+                ),
+                child: const Text('Sair da conta'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -412,6 +520,7 @@ class _ItemPerfil extends StatelessWidget {
   final IconData icon;
   final String label;
   final Widget? trailing;
+
   const _ItemPerfil({required this.icon, required this.label, this.trailing});
 
   @override
@@ -419,7 +528,10 @@ class _ItemPerfil extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, size: 20, color: Colors.grey.shade600),
-      title: Text(label, style: const TextStyle(fontSize: 13)),
+      title: Text(
+        label,
+        style: const TextStyle(fontSize: 13, color: Colors.grey),
+      ),
       trailing: trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
       onTap: () {},
     );
