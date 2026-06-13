@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hospitalmanagement_flutter/services/notification_service.dart';
 import 'package:hospitalmanagement_flutter/stores/stores.dart';
 import 'package:hospitalmanagement_flutter/theme/app_theme.dart';
 import 'package:hospitalmanagement_flutter/widgets/app_widgets.dart';
@@ -475,8 +474,7 @@ class _PerfilSheet extends StatelessWidget {
             const Divider(height: 28),
             _ItemPerfil(
               icon: Icons.notifications_outlined,
-              label: 'Copiar token FCM (teste)',
-              onTap: () => NotificationService.instance.copiarToken(context),
+              label: 'Notificações e alertas',
             ),
             _ItemPerfil(icon: Icons.history_outlined, label: 'Auditoria de IA'),
             _ItemPerfil(

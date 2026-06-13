@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 typedef PushAlertCallback = void Function({
@@ -22,6 +21,7 @@ class NotificationService {
 
   static final NotificationService instance = NotificationService._();
 
+  static const fcmTopic = 'alertas_medistock';
   static const _channelId = 'medistock_alertas';
   static const _channelName = 'Alertas MediStock';
 
@@ -80,10 +80,22 @@ class NotificationService {
     );
 
     await fetchToken();
+    await _subscribeToTopic();
+
     _messaging.onTokenRefresh.listen((newToken) {
       _token = newToken;
       _lastError = null;
+      debugPrint('FCM Token (refresh): $newToken');
     });
+  }
+
+  Future<void> _subscribeToTopic() async {
+    try {
+      await _messaging.subscribeToTopic(fcmTopic);
+      debugPrint('FCM inscrito no tópico: $fcmTopic');
+    } catch (e) {
+      debugPrint('Erro ao inscrever no tópico FCM: $e');
+    }
   }
 
   Future<String?> fetchToken({bool forceRefresh = false}) async {
@@ -102,7 +114,7 @@ class NotificationService {
         final token = await _messaging.getToken();
         if (token != null && token.isNotEmpty) {
           _token = token;
-          debugPrint('FCM token obtido com sucesso');
+          debugPrint('FCM Token: $token');
           return token;
         }
       } catch (e, stack) {
@@ -117,6 +129,7 @@ class NotificationService {
     }
 
     _lastError ??= _mensagemErroPlataforma();
+    debugPrint('FCM Token indisponível: $_lastError');
     return null;
   }
 
@@ -136,33 +149,6 @@ class NotificationService {
       return 'FCM não funciona no simulador iOS. Teste no emulador Android.';
     }
     return 'Token FCM indisponível nesta plataforma.';
-  }
-
-  Future<void> copiarToken(BuildContext context) async {
-    var token = _token;
-    if (token == null || token.isEmpty) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Buscando token FCM...')),
-      );
-      token = await fetchToken(forceRefresh: true);
-    }
-
-    if (token == null || token.isEmpty) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(lastError ?? 'Token FCM indisponível.')),
-      );
-      return;
-    }
-
-    await Clipboard.setData(ClipboardData(text: token));
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Token FCM copiado para a área de transferência'),
-      ),
-    );
   }
 
   void setupFcmListeners({
