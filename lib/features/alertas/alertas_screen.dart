@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hospitalmanagement_flutter/services/notification_service.dart';
 import 'package:provider/provider.dart';
 import '../../stores/stores.dart';
 import '../../theme/app_theme.dart';
@@ -38,6 +39,11 @@ class _AlertasScreenState extends State<AlertasScreen> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Copiar token FCM',
+            icon: const Icon(Icons.vpn_key_outlined, color: Colors.white70),
+            onPressed: () => NotificationService.instance.copiarToken(context),
+          ),
           if (store.totalCriticos > 0)
             Padding(
               padding: const EdgeInsets.only(right: 16),
