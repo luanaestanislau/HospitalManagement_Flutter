@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hospitalmanagement_flutter/features/home/home_screen.dart';
+import 'package:hospitalmanagement_flutter/services/notification_service.dart';
 import 'package:hospitalmanagement_flutter/stores/stores.dart';
 import 'package:hospitalmanagement_flutter/theme/app_theme.dart';
-import 'package:hospitalmanagement_flutter/widgets/app_widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../ai/ai_screen.dart';
@@ -19,6 +19,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _abaAtual = 0;
+  bool _fcmInicializado = false;
 
   final List<Widget> _telas = const [
     HomeScreen(),
@@ -27,6 +28,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
     IaScreen(),
     LogisticaScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _inicializarFcm());
+  }
+
+  Future<void> _inicializarFcm() async {
+    if (_fcmInicializado || !mounted) return;
+
+    final notificationService = NotificationService.instance;
+
+    try {
+      await notificationService.initialize();
+      _fcmInicializado = true;
+    } catch (e) {
+      debugPrint('Erro ao inicializar FCM: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('FCM: falha na inicialização ($e)')),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    final alertasStore = context.read<AlertasStore>();
+    notificationService.setupFcmListeners(
+      onPushAlert: alertasStore.adicionarAlertaDePush,
+      onNavigateToAlertas: () => setState(() => _abaAtual = 1),
+      onForegroundSnackBar: (titulo) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Push recebida: $titulo'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -158,6 +158,28 @@ class AlertasStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void adicionarAlertaDePush({
+    required String titulo,
+    required String descricao,
+    String prioridade = 'atencao',
+    String tipo = 'push',
+  }) {
+    final duplicado = _alertas.any(
+      (a) => a['titulo'] == titulo && a['descricao'] == descricao,
+    );
+    if (duplicado) return;
+
+    _alertas.insert(0, {
+      'id': DateTime.now().millisecondsSinceEpoch,
+      'tipo': tipo,
+      'prioridade': prioridade,
+      'titulo': titulo,
+      'descricao': descricao,
+      'acoes': ['Ver'],
+    });
+    notifyListeners();
+  }
+
   void carregarMock() {
     _alertas = [
       {

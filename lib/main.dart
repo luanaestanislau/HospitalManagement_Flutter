@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:hospitalmanagement_flutter/features/ai/ai_screen.dart';
 import 'package:hospitalmanagement_flutter/features/alertas/alertas_screen.dart';
@@ -12,14 +13,15 @@ import 'package:provider/provider.dart';
 import 'package:hospitalmanagement_flutter/features/auth/login_screen.dart';
 import 'package:hospitalmanagement_flutter/stores/stores.dart';
 import 'features/estoque/estoque_screen.dart';
+import 'firebase_messaging_background.dart';
 import 'firebase_options.dart';
 
 import 'features/auth/cadastro_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   final dbService = DatabaseService.instance;
   final iaService = IaService();

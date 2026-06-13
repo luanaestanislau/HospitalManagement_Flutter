@@ -520,8 +520,14 @@ class _ItemPerfil extends StatelessWidget {
   final IconData icon;
   final String label;
   final Widget? trailing;
+  final VoidCallback? onTap;
 
-  const _ItemPerfil({required this.icon, required this.label, this.trailing});
+  const _ItemPerfil({
+    required this.icon,
+    required this.label,
+    this.trailing,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -533,7 +539,7 @@ class _ItemPerfil extends StatelessWidget {
         style: const TextStyle(fontSize: 13, color: Colors.grey),
       ),
       trailing: trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
-      onTap: () {},
+      onTap: onTap,
     );
   }
 }
