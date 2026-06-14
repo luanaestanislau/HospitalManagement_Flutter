@@ -439,20 +439,29 @@ class LogisticaStore extends ChangeNotifier {
   }
 
   void carregarMock() {
+    // Coordenadas (lat/lng) do fornecedor de cada pedido e do hospital de
+    // destino (HC Unicamp). Os pontos do mapa de Logística são gerados a
+    // partir desses dados — nenhum dado de localização de pacientes é usado.
     _pedidos = [
       {
         'id': 38, 'codigo': '#OG038', 'fornecedor': 'ForneceMed',
         'status': 'atrasado', 'eta': '12h00', 'sla_excedido': '2h10',
         'item': 'Soro Fisiológico 500ml',
+        'lat': -22.9099, 'lng': -47.0626, // ForneceMed · Campinas
+        'destinoLat': -22.8336, 'destinoLng': -47.0653, // HC Unicamp
       },
       {
         'id': 41, 'codigo': '#OG041', 'fornecedor': 'MediSupply',
         'status': 'em_rota', 'eta': '16h30', 'item': 'Seringa 5ml · 500 un',
+        'lat': -23.5505, 'lng': -46.6333, // MediSupply · São Paulo
+        'destinoLat': -22.8336, 'destinoLng': -47.0653, // HC Unicamp
       },
       {
         'id': 39, 'codigo': '#OG039', 'fornecedor': 'ForneceMed',
         'status': 'entregue', 'hora_entrega': '13h44',
         'item': 'Luva Estéril P · 200 cx',
+        'lat': -22.8951, 'lng': -47.0419, // ForneceMed (CD) · Campinas
+        'destinoLat': -22.8336, 'destinoLng': -47.0653, // HC Unicamp
       },
     ];
     _transferencias = [
@@ -461,12 +470,16 @@ class LogisticaStore extends ChangeNotifier {
         'destino': 'HC Unicamp', 'item': 'Morfina 10mg/ml',
         'quantidade': 18, 'urgencia': 'imediata', 'status': 'pendente',
         'sugerida_por_ia': true,
+        'origemLat': -22.9056, 'origemLng': -47.0608, // Santa Casa
+        'destinoLat': -22.8336, 'destinoLng': -47.0653, // HC Unicamp
       },
       {
         'id': 2, 'origem': 'HC Unicamp',
         'destino': 'Santa Casa – Campinas', 'item': 'Epinefrina 1mg/ml',
         'quantidade': 10, 'urgencia': 'preventiva', 'status': 'pendente',
         'sugerida_por_ia': true,
+        'origemLat': -22.8336, 'origemLng': -47.0653, // HC Unicamp
+        'destinoLat': -22.9056, 'destinoLng': -47.0608, // Santa Casa
       },
     ];
     notifyListeners();

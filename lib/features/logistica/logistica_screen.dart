@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../stores/stores.dart';
 import '../../theme/app_theme.dart';
@@ -208,14 +209,10 @@ class _AbaEntregasState extends State<_AbaEntregas> {
           ),
         ),
 
-        // Em produção: GoogleMap(initialCameraPosition: ..., markers: ...)
-        _MapaPlaceholder(
-          pontos: const [
-            {'cor': AppTheme.red400, 'label': 'Atrasado'},
-            {'cor': AppTheme.blue600, 'label': 'Em rota'},
-            {'cor': AppTheme.green600, 'label': 'Entregue'},
-          ],
-        ),
+        // Mapa real (google_maps_flutter): marcadores gerados a partir dos
+        // pedidos, coloridos por status (vermelho=atrasado, azul=em rota,
+        // verde=entregue) e com o trajeto fornecedor → hospital.
+        const _MapaEntregas(),
 
         Expanded(
           child: pedidosFiltrados.isEmpty
@@ -587,117 +584,177 @@ class _TransferenciaCard extends StatelessWidget {
   }
 }
 
-class _MapaPlaceholder extends StatelessWidget {
-  final List<Map<String, dynamic>> pontos;
-  const _MapaPlaceholder({required this.pontos});
+/// Mapa da aba **Entregas**.
+///
+/// Mostra o trajeto dos pedidos que vêm dos fornecedores até o hospital.
+/// Os marcadores são gerados a partir de `store.pedidos` e coloridos de
+/// acordo com o status: vermelho (atrasado), azul (em rota) e verde
+/// (entregue). Como observa a store, o mapa se atualiza sozinho sempre que
+/// os dados mudam.
+class _MapaEntregas extends StatelessWidget {
+  const _MapaEntregas();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 120,
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.blue50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.blue100),
-      ),
-      child: Stack(
-        children: [
-          const Center(
-            child: Text(
-              'Mapa em tempo real',
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.blue600),
-            ),
+    final pedidos = context.watch<LogisticaStore>().pedidos;
+
+    final markers = <Marker>{};
+    final polylines = <Polyline>{};
+
+    for (final p in pedidos) {
+      final status = p['status'] as String;
+      final fornecedor = LatLng(p['lat'] as double, p['lng'] as double);
+      final hospital = LatLng(p['destinoLat'] as double, p['destinoLng'] as double);
+      final cor = _huePorStatus(status);
+
+      markers.add(
+        Marker(
+          markerId: MarkerId('pedido-${p['id']}'),
+          position: fornecedor,
+          icon: BitmapDescriptor.defaultMarkerWithHue(cor),
+          infoWindow: InfoWindow(
+            title: '${p['codigo']} · ${p['fornecedor']}',
+            snippet: '${p['item']} · ${status.replaceAll('_', ' ')}',
           ),
-          // Pontos simulados
-          Positioned(
-            top: 25,
-            left: 50,
-            child: _PontoMapa(cor: AppTheme.red400),
+        ),
+      );
+
+      // Trajeto fornecedor → hospital (exceto já entregue).
+      if (status != 'entregue') {
+        polylines.add(
+          Polyline(
+            polylineId: PolylineId('rota-${p['id']}'),
+            points: [fornecedor, hospital],
+            color: _corPorStatus(status),
+            width: 3,
           ),
-          Positioned(
-            top: 55,
-            left: 140,
-            child: _PontoMapa(cor: AppTheme.blue600),
-          ),
-          Positioned(
-            top: 30,
-            right: 60,
-            child: _PontoMapa(cor: AppTheme.green600),
-          ),
-          // Instrução para integrar Maps
-          Positioned(
-            bottom: 8,
-            right: 10,
-            child: Text(
-              '⚡ Integre google_maps_flutter aqui',
-              style: TextStyle(fontSize: 9, color: Colors.grey.shade400),
-            ),
-          ),
-        ],
-      ),
-    );
+        );
+      }
+    }
+
+    // Marcador fixo do hospital de destino (HC Unicamp).
+    if (pedidos.isNotEmpty) {
+      final h = pedidos.first;
+      markers.add(
+        Marker(
+          markerId: const MarkerId('hospital-destino'),
+          position: LatLng(h['destinoLat'] as double, h['destinoLng'] as double),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+          infoWindow: const InfoWindow(title: 'HC Unicamp', snippet: 'Hospital de destino'),
+        ),
+      );
+    }
+
+    return _MapaBase(markers: markers, polylines: polylines);
   }
+
+  static double _huePorStatus(String status) => switch (status) {
+        'atrasado' => BitmapDescriptor.hueRed,
+        'em_rota' => BitmapDescriptor.hueAzure,
+        'entregue' => BitmapDescriptor.hueGreen,
+        _ => BitmapDescriptor.hueAzure,
+      };
+
+  static Color _corPorStatus(String status) => switch (status) {
+        'atrasado' => AppTheme.red400,
+        'em_rota' => AppTheme.blue600,
+        'entregue' => AppTheme.green600,
+        _ => AppTheme.blue600,
+      };
 }
 
+/// Mapa da aba **Transferências**.
+///
+/// Mostra a rede de hospitais parceiros e as movimentações de estoque entre
+/// eles. Para cada transferência sugerida pela IA, desenha o trajeto entre o
+/// hospital de origem e o de destino. Marcadores e trajetos são gerados a
+/// partir de `store.transferencias`.
 class _MapaRede extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      decoration: BoxDecoration(
-        color: AppTheme.blue50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.blue100),
-      ),
-      child: Stack(
-        children: [
-          const Center(
-            child: Text('Rede hospitalar — mapa inter-hospitalar',
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.blue600)),
-          ),
-          Positioned(top: 18, left: 30, child: _PontoMapa(cor: AppTheme.blue600)),
-          Positioned(top: 50, left: 80, child: _PontoMapa(cor: AppTheme.red400)),
-          Positioned(top: 25, right: 80, child: _PontoMapa(cor: AppTheme.green600)),
-          Positioned(bottom: 18, right: 40, child: _PontoMapa(cor: AppTheme.amber400)),
-          Positioned(
-            bottom: 6,
-            right: 10,
-            child: Text('4 hospitais na rede',
-                style: TextStyle(fontSize: 9, color: Colors.grey.shade400)),
-          ),
-        ],
-      ),
-    );
+    final transferencias = context.watch<LogisticaStore>().transferencias;
+
+    final markers = <Marker>{};
+    final polylines = <Polyline>{};
+
+    for (final t in transferencias) {
+      final origem = LatLng(t['origemLat'] as double, t['origemLng'] as double);
+      final destino = LatLng(t['destinoLat'] as double, t['destinoLng'] as double);
+
+      markers.add(
+        Marker(
+          markerId: MarkerId('origem-${t['id']}'),
+          position: origem,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: InfoWindow(title: t['origem'] as String, snippet: 'Origem'),
+        ),
+      );
+      markers.add(
+        Marker(
+          markerId: MarkerId('destino-${t['id']}'),
+          position: destino,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
+          infoWindow: InfoWindow(title: t['destino'] as String, snippet: 'Destino'),
+        ),
+      );
+
+      // Trajeto da transferência (sugestão de redistribuição da IA).
+      polylines.add(
+        Polyline(
+          polylineId: PolylineId('transf-${t['id']}'),
+          points: [origem, destino],
+          color: AppTheme.purple600,
+          width: 3,
+          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+        ),
+      );
+    }
+
+    return _MapaBase(markers: markers, polylines: polylines, altura: 140);
   }
 }
 
-class _PontoMapa extends StatelessWidget {
-  final Color cor;
-  const _PontoMapa({required this.cor});
+/// Widget base de mapa reutilizado pelas duas abas. Centraliza a câmera para
+/// enquadrar todos os marcadores informados.
+class _MapaBase extends StatelessWidget {
+  final Set<Marker> markers;
+  final Set<Polyline> polylines;
+  final double altura;
+
+  const _MapaBase({
+    required this.markers,
+    required this.polylines,
+    this.altura = 160,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Centro da câmera: média das posições dos marcadores (fallback: Campinas).
+    LatLng centro = const LatLng(-22.8336, -47.0653);
+    if (markers.isNotEmpty) {
+      final lat = markers.map((m) => m.position.latitude).reduce((a, b) => a + b) /
+          markers.length;
+      final lng = markers.map((m) => m.position.longitude).reduce((a, b) => a + b) /
+          markers.length;
+      centro = LatLng(lat, lng);
+    }
+
     return Container(
-      width: 12,
-      height: 12,
+      height: altura,
+      margin: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: cor,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-              color: cor.withOpacity(0.35),
-              blurRadius: 4,
-              spreadRadius: 1)
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.blue100),
+      ),
+      child: GoogleMap(
+        initialCameraPosition: CameraPosition(target: centro, zoom: 9),
+        markers: markers,
+        polylines: polylines,
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: false,
+        mapToolbarEnabled: false,
+        liteModeEnabled: true, // mapa estático leve, ideal para preview embutido
       ),
     );
   }
