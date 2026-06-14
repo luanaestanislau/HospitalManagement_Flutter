@@ -37,7 +37,7 @@ dependencies:
 
   # Banco local
   sqflite: ^2.3.3
-# path: ^1.9.0
+  path: ^1.9.0
 
   # Preferências
   shared_preferences: ^2.5.5

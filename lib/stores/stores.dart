@@ -330,13 +330,18 @@ class EstoqueStore extends ChangeNotifier {
 class IaStore extends ChangeNotifier {
   final IaService ia;
   final EstoqueStore estoqueStore;
+  final bool usarMockQuandoIaFalhar;
 
   Map<String, dynamic>? _analiseResiliencia;
   Map<String, dynamic>? _eventoAtivo;
   bool _carregando = false;
   String? _erro;
 
-  IaStore({required this.ia, required this.estoqueStore});
+  IaStore({
+    required this.ia,
+    required this.estoqueStore,
+    this.usarMockQuandoIaFalhar = false,
+  });
 
   Map<String, dynamic>? get analiseResiliencia => _analiseResiliencia;
   Map<String, dynamic>? get eventoAtivo => _eventoAtivo;
@@ -370,8 +375,9 @@ class IaStore extends ChangeNotifier {
       );
     } catch (e) {
       _erro = e.toString();
-      // Carrega mock se a API falhar (útil em desenvolvimento)
-      _carregarMockResiliencia();
+      if (usarMockQuandoIaFalhar) {
+        _carregarMockResiliencia();
+      }
     }
 
     _carregando = false;
@@ -432,6 +438,74 @@ class LogisticaStore extends ChangeNotifier {
       _pedidos.where((p) => p['status'] == 'atrasado').length;
   int get pedidosEmRota =>
       _pedidos.where((p) => p['status'] == 'em_rota').length;
+
+  Future<void> carregarDoBanco() async {
+    final db = DatabaseService.instance;
+
+    final fornecedores = await db.query('fornecedores');
+    final fornecedorPorId = <int, String>{
+      for (final f in fornecedores) (f['id'] as int): (f['nome'] as String),
+    };
+
+    final itens = await db.query('itens');
+    final itemPorId = <int, String>{
+      for (final i in itens) (i['id'] as int): (i['nome'] as String),
+    };
+
+    final hospitais = await db.query('hospitais_parceiros');
+    final hospitalPorId = <int, String>{
+      for (final h in hospitais) (h['id'] as int): (h['nome'] as String),
+    };
+
+    final pedidosDb = await db.query('pedidos', orderBy: 'id DESC');
+    _pedidos = pedidosDb.map((p) {
+      final status = (p['status'] ?? 'pendente').toString();
+      final fornecedorId = p['fornecedor_id'] as int?;
+      final itensPedido = (jsonDecode((p['itens'] ?? '[]').toString()) as List)
+          .cast<Map<String, dynamic>>();
+      final primeiroItem = itensPedido.isNotEmpty ? itensPedido.first : null;
+      final itemId = primeiroItem?['item_id'] as int?;
+      final itemNome = itemId != null ? (itemPorId[itemId] ?? 'Item') : 'Item';
+      final qtd = primeiroItem?['quantidade'] ?? 0;
+
+      return {
+        'id': p['id'],
+        'codigo': p['codigo'] ?? '#OG000',
+        'fornecedor': fornecedorId != null
+            ? (fornecedorPorId[fornecedorId] ?? 'Fornecedor')
+            : 'Fornecedor',
+        'status': status,
+        'eta': p['data_eta'] != null ? 'previsto' : '--',
+        'sla_excedido': status == 'atrasado' ? 'acima do SLA' : null,
+        'hora_entrega': p['data_entrega'] != null ? 'entregue' : null,
+        'item': '$itemNome · $qtd un',
+      };
+    }).toList();
+
+    final transferenciasDb = await db.query('transferencias', orderBy: 'id DESC');
+    _transferencias = transferenciasDb.map((t) {
+      final origemId = t['hospital_origem_id'] as int?;
+      final destinoId = t['hospital_destino_id'] as int?;
+      final itemId = t['item_id'] as int?;
+
+      return {
+        'id': t['id'],
+        'origem': origemId != null
+            ? (hospitalPorId[origemId] ?? 'Hospital origem')
+            : 'Hospital origem',
+        'destino': destinoId != null
+            ? (hospitalPorId[destinoId] ?? 'Hospital destino')
+            : 'Hospital destino',
+        'item': itemId != null ? (itemPorId[itemId] ?? 'Item') : 'Item',
+        'quantidade': t['quantidade'] ?? 0,
+        'urgencia': t['urgencia'] ?? 'moderada',
+        'status': t['status'] ?? 'pendente',
+        'sugerida_por_ia': (t['sugerida_por_ia'] ?? 0) == 1,
+      };
+    }).toList();
+
+    notifyListeners();
+  }
 
   void mudarAba(String aba) {
     _abaAtiva = aba;

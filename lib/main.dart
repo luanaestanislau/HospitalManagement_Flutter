@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 // Services e Stores
 import 'package:hospitalmanagement_flutter/services/database.dart';
 import 'package:hospitalmanagement_flutter/services/ia_service.dart';
+import 'package:hospitalmanagement_flutter/services/notification_service.dart';
 import 'package:hospitalmanagement_flutter/stores/stores.dart';
 import 'package:hospitalmanagement_flutter/firebase_options.dart';
 import 'firebase_messaging_background.dart';
@@ -25,33 +26,18 @@ import 'package:firebase_app_installations/firebase_app_installations.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Inicialização do Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // 2. Configuração de Notificações
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  await NotificationService.instance.initialize();
 
-  // Solicita permissão (Importante para iOS/Android 13+)
-  await messaging.requestPermission(alert: true, badge: true, sound: true);
-
-  // Captura de IDs para Teste (Sempre visível no log ao iniciar)
-  String? token = await messaging.getToken();
+  String? token = await FirebaseMessaging.instance.getToken();
   String fid = await FirebaseInstallations.instance.getId();
   debugPrint("==== FIREBASE DEBUG INFO ====");
   debugPrint("TOKEN FCM: $token");
   debugPrint("ID INSTALAÇÃO (FID): $fid");
   debugPrint("=============================");
 
-  // Listener para App Aberto
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    debugPrint('Notificação recebida com app aberto: ${message.notification?.title}');
-  });
-
-  // Listener para Clique na Notificação
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    debugPrint('Usuário abriu o app pela notificação: ${message.notification?.title}');
-  });
 
   // 3. Inicialização de Serviços
   final dbService = DatabaseService.instance;

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -34,12 +35,18 @@ class NotificationService {
   PushAlertCallback? _onPushAlert;
   VoidCallback? _onNavigateToAlertas;
   void Function(String titulo)? _onForegroundSnackBar;
+  bool _initialized = false;
+  StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<RemoteMessage>? _onMessageSub;
+  StreamSubscription<RemoteMessage>? _onMessageOpenedSub;
 
   String? get token => _token;
   String? get lastError => _lastError;
   bool get isReady => _token != null && _token!.isNotEmpty;
 
   Future<void> initialize() async {
+    if (_initialized) return;
+
     _lastError = null;
 
     const androidChannel = AndroidNotificationChannel(
@@ -82,11 +89,13 @@ class NotificationService {
     await fetchToken();
     await _subscribeToTopic();
 
-    _messaging.onTokenRefresh.listen((newToken) {
+    _tokenRefreshSub ??= _messaging.onTokenRefresh.listen((newToken) {
       _token = newToken;
       _lastError = null;
       debugPrint('FCM Token (refresh): $newToken');
     });
+
+    _initialized = true;
   }
 
   Future<void> _subscribeToTopic() async {
@@ -160,14 +169,29 @@ class NotificationService {
     _onNavigateToAlertas = onNavigateToAlertas;
     _onForegroundSnackBar = onForegroundSnackBar;
 
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpened);
+    _onMessageSub?.cancel();
+    _onMessageOpenedSub?.cancel();
+
+    _onMessageSub = FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    _onMessageOpenedSub = FirebaseMessaging.onMessageOpenedApp.listen(
+      _handleMessageOpened,
+    );
 
     _messaging.getInitialMessage().then((message) {
       if (message == null) return;
       _processMessageData(message);
       _onNavigateToAlertas?.call();
     });
+  }
+
+  void disposeFcmListeners() {
+    _onMessageSub?.cancel();
+    _onMessageOpenedSub?.cancel();
+    _onMessageSub = null;
+    _onMessageOpenedSub = null;
+    _onPushAlert = null;
+    _onNavigateToAlertas = null;
+    _onForegroundSnackBar = null;
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {

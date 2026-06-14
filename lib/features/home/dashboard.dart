@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hospitalmanagement_flutter/features/home/home_screen.dart';
+import 'package:hospitalmanagement_flutter/services/database.dart';
 import 'package:hospitalmanagement_flutter/services/notification_service.dart';
 import 'package:hospitalmanagement_flutter/stores/stores.dart';
 import 'package:hospitalmanagement_flutter/theme/app_theme.dart';
@@ -19,7 +20,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _abaAtual = 0;
-  bool _fcmInicializado = false;
+  bool _bootstrapExecutado = false;
 
   final List<Widget> _telas = const [
     HomeScreen(),
@@ -32,43 +33,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _inicializarFcm());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _bootstrapDados();
+      final alertasStore = context.read<AlertasStore>();
+      NotificationService.instance.setupFcmListeners(
+        onPushAlert: alertasStore.adicionarAlertaDePush,
+        onNavigateToAlertas: () {
+          if (mounted) setState(() => _abaAtual = 1);
+        },
+        onForegroundSnackBar: (titulo) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🔔 $titulo'),
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Ver',
+                onPressed: () => setState(() => _abaAtual = 1),
+              ),
+            ),
+          );
+        },
+      );
+    });
   }
 
-  Future<void> _inicializarFcm() async {
-    if (_fcmInicializado || !mounted) return;
+  Future<void> _bootstrapDados() async {
+    if (_bootstrapExecutado || !mounted) return;
+    _bootstrapExecutado = true;
 
-    final notificationService = NotificationService.instance;
-
-    try {
-      await notificationService.initialize();
-      _fcmInicializado = true;
-    } catch (e) {
-      debugPrint('Erro ao inicializar FCM: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('FCM: falha na inicialização ($e)')),
-        );
-      }
-      return;
-    }
-
+    await DatabaseService.instance.seedInitialDataIfEmpty();
     if (!mounted) return;
 
+    final estoqueStore = context.read<EstoqueStore>();
     final alertasStore = context.read<AlertasStore>();
-    notificationService.setupFcmListeners(
-      onPushAlert: alertasStore.adicionarAlertaDePush,
-      onNavigateToAlertas: () => setState(() => _abaAtual = 1),
-      onForegroundSnackBar: (titulo) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Push recebida: $titulo'),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      },
-    );
+    final logisticaStore = context.read<LogisticaStore>();
+    final iaStore = context.read<IaStore>();
+
+    await estoqueStore.carregar();
+
+    alertasStore.gerarAlertas();
+    await logisticaStore.carregarDoBanco();
+
+    if (iaStore.analiseResiliencia == null) {
+      await iaStore.analisarResiliencia();
+    }
+  }
+
+  @override
+  void dispose() {
+    NotificationService.instance.disposeFcmListeners();
+    super.dispose();
   }
 
   @override
@@ -126,30 +142,30 @@ class _AlertIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final alertasStore = context.watch<AlertasStore>();
-    // final total = alertasStore.totalCriticos;
+    final alertasStore = context.watch<AlertasStore>();
+    final total = alertasStore.totalCriticos;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Icon(ativo ? Icons.notifications : Icons.notifications_outlined),
-        // if (total > 0)
-        //   Positioned(
-        //     right: -6,
-        //     top: -4,
-        //     child: Container(
-        //       padding: const EdgeInsets.all(2),
-        //       decoration: const BoxDecoration(
-        //         color: AppTheme.red400,
-        //         shape: BoxShape.circle,
-        //       ),
-        //       constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-        //       child: Text(
-        //         '$total',
-        //         style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w500),
-        //         textAlign: TextAlign.center,
-        //       ),
-        //     ),
-        //   ),
+        if (total > 0)
+          Positioned(
+            right: -6,
+            top: -4,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: AppTheme.red400,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                '$total',
+                style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w500),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
       ],
     );
   }

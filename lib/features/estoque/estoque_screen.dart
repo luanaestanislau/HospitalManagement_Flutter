@@ -18,6 +18,20 @@ class _EstoqueScreenState extends State<EstoqueScreen> {
   String _termoBusca = '';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final estoqueStore = context.read<EstoqueStore>();
+      if (estoqueStore.itens.isEmpty) {
+        await estoqueStore.carregar();
+      }
+      if (!mounted) return;
+      context.read<AlertasStore>().gerarAlertas();
+    });
+  }
+
+  @override
   void dispose() {
     _buscaCtrl.dispose();
     super.dispose();
@@ -41,7 +55,7 @@ class _EstoqueScreenState extends State<EstoqueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final store = context.read<EstoqueStore>();
+    final store = context.watch<EstoqueStore>();
     final essenciais = store.itensEssenciaisBaixaDemanda;
     final primordiais = _filtrar(store.itensPrimordiais);
 
@@ -65,7 +79,11 @@ class _EstoqueScreenState extends State<EstoqueScreen> {
       ),
       body: store.carregando
         ? const Center(child: CircularProgressIndicator(color: AppTheme.purple600),)
-          : RefreshIndicator(onRefresh: store.carregar,
+          : RefreshIndicator(onRefresh: () async {
+            await store.carregar();
+            if (!context.mounted) return;
+            context.read<AlertasStore>().gerarAlertas();
+          },
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [

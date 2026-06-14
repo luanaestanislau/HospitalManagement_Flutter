@@ -15,6 +15,13 @@ class _AlertasScreenState extends State<AlertasScreen> {
   String _filtro = 'todos';
 
   @override
+  void initState() {
+    super.initState();
+    // Os listeners FCM são gerenciados pelo DashboardScreen
+    // para funcionar independentemente da aba ativa.
+  }
+
+  @override
   Widget build(BuildContext context) {
     final store = context.watch<AlertasStore>();
 
