@@ -126,7 +126,7 @@ class _IaToggleBtn extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           decoration: BoxDecoration(
             color: ativo ? AppTheme.purple600 : Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(8),
