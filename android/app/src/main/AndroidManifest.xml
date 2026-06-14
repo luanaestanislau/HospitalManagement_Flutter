@@ -4,6 +4,11 @@
         android:label="hospitalmanagement_flutter"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Google Maps (Seção 5 - Mapas e Geolocalização).
+             Substitua YOUR_API_KEY por uma chave com "Maps SDK for Android" habilitado. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBj7pFYjgaZq-N5s7l2ESQCvNewQ_8WBhc" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
