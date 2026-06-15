@@ -17,8 +17,6 @@ class _AlertasScreenState extends State<AlertasScreen> {
   @override
   void initState() {
     super.initState();
-    // Os listeners FCM são gerenciados pelo DashboardScreen
-    // para funcionar independentemente da aba ativa.
   }
 
   @override

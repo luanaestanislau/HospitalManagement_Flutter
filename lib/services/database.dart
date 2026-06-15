@@ -155,6 +155,24 @@ class DatabaseService {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE casos_clinicos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        especialidade TEXT NOT NULL,
+        -- oncologia | cardiologia | neurologia | ortopedia | emergencia
+        descricao TEXT NOT NULL,
+        item_id INTEGER NOT NULL,
+        quantidade_necessaria INTEGER NOT NULL,
+        custo_estimado REAL NOT NULL,
+        prioridade TEXT NOT NULL DEFAULT 'media',
+        -- alta | media | baixa
+        frequencia_anual INTEGER DEFAULT 0,
+        -- quantos casos similares acontecem por ano
+        hospital_id INTEGER,
+        data_criacao TEXT NOT NULL
+      )
+    ''');
+
   }
 
   Future<int> insert(String table, Map<String, dynamic> data) async {
@@ -203,6 +221,7 @@ class DatabaseService {
 
     final now = DateTime.now().toIso8601String();
 
+    //Fornecedores
     await dbClient.insert('fornecedores', {
       'id': 1,
       'nome': 'ForneceMed',
@@ -221,14 +240,24 @@ class DatabaseService {
       'historico_atrasos': 1,
       'ativo': 1,
     });
+    await dbClient.insert('fornecedores', {
+      'id': 3,
+      'nome': 'PharmaExpress',
+      'cnpj': '00.000.000/0001-30',
+      'contato': 'vendas@pharmaexpress.com',
+      'score_confiabilidade': 78,
+      'historico_atrasos': 5,
+      'ativo': 1,
+    });
 
+    //Básicos
     await dbClient.insert('itens', {
       'id': 1,
       'nome': 'Soro Fisiológico 500ml',
-      'categoria': 'Insumos',
-      'quantidade_atual': 18,
+      'categoria': 'Insumos Básicos',
+      'quantidade_atual': 850,
       'quantidade_minima': 100,
-      'quantidade_maxima': 300,
+      'quantidade_maxima': 1000,
       'quantidade_recomendada_ia': null,
       'local_armazenamento': 'Farmácia Central A1',
       'unidade_medida': 'un',
@@ -236,14 +265,15 @@ class DatabaseService {
       'lote': 'SF-2026-01',
       'fornecedor_id': 1,
       'tipo': 'primordial',
-      'status': 'critico',
+      'status': 'normal',
       'ultima_atualizacao': now,
-      'historico_consumo': jsonEncode([10, 12, 8, 9, 11, 10, 12, 14, 13, 9]),
+      'historico_consumo': jsonEncode([80, 75, 82, 90, 78, 85, 88, 92, 87, 83]),
     });
+
     await dbClient.insert('itens', {
       'id': 2,
-      'nome': 'Seringa 10ml',
-      'categoria': 'Descartáveis',
+      'nome': 'Seringa 10ml Descartável',
+      'categoria': 'Insumos Básicos',
       'quantidade_atual': 340,
       'quantidade_minima': 200,
       'quantidade_maxima': 600,
@@ -258,44 +288,284 @@ class DatabaseService {
       'ultima_atualizacao': now,
       'historico_consumo': jsonEncode([20, 19, 22, 23, 18, 17, 21, 24, 20, 19]),
     });
+
     await dbClient.insert('itens', {
       'id': 3,
-      'nome': 'Morfina 10mg/ml',
-      'categoria': 'Controlados',
-      'quantidade_atual': 5,
-      'quantidade_minima': 3,
-      'quantidade_maxima': 20,
-      'quantidade_recomendada_ia': 15,
-      'local_armazenamento': 'Farmácia Central B2',
-      'unidade_medida': 'un',
-      'data_validade': '2026-12-15',
-      'lote': 'MF-2026-04',
+      'nome': 'Vacina Influenza',
+      'categoria': 'Imunobiológicos',
+      'quantidade_atual': 120,
+      'quantidade_minima': 50,
+      'quantidade_maxima': 200,
+      'quantidade_recomendada_ia': null,
+      'local_armazenamento': 'Câmara Fria 01',
+      'unidade_medida': 'doses',
+      'data_validade': '2026-08-15',
+      'lote': 'VF-2025-12',
+      'fornecedor_id': 2,
+      'tipo': 'primordial',
+      'status': 'atencao',
+      'ultima_atualizacao': now,
+      'historico_consumo': jsonEncode([10, 8, 12, 9, 11, 10, 9, 8, 10, 11]),
+    });
+
+    //itens caros
+    await dbClient.insert('itens', {
+      'id': 4,
+      'nome': 'Pembrolizumab 100mg (Keytruda)',
+      'categoria': 'Quimioterápicos',
+      'quantidade_atual': 2,
+      'quantidade_minima': 1,
+      'quantidade_maxima': 8,
+      'quantidade_recomendada_ia': 4,
+      'local_armazenamento': 'Oncologia - Geladeira Especializada',
+      'unidade_medida': 'frascos',
+      'data_validade': '2027-03-20',
+      'lote': 'PEM-2026-08',
+      'fornecedor_id': 3,
+      'tipo': 'essencial_baixa_demanda',
+      'status': 'atencao',
+      'ultima_atualizacao': now,
+      'historico_consumo': jsonEncode([0, 1, 0, 2, 1, 0, 1, 0, 1, 2]),
+    });
+
+    await dbClient.insert('itens', {
+      'id': 5,
+      'nome': 'Alteplase 50mg (tPA)',
+      'categoria': 'Trombolíticos',
+      'quantidade_atual': 1,
+      'quantidade_minima': 2,
+      'quantidade_maxima': 6,
+      'quantidade_recomendada_ia': 5,
+      'local_armazenamento': 'Emergência - Armário Refrigerado A',
+      'unidade_medida': 'frascos',
+      'data_validade': '2026-11-10',
+      'lote': 'ALT-2026-03',
+      'fornecedor_id': 1,
+      'tipo': 'essencial_baixa_demanda',
+      'status': 'critico',
+      'ultima_atualizacao': now,
+      'historico_consumo': jsonEncode([1, 0, 1, 1, 0, 2, 1, 0, 1, 0]),
+    });
+
+    await dbClient.insert('itens', {
+      'id': 6,
+      'nome': 'Eculizumab 300mg (Soliris)',
+      'categoria': 'Imunossupressores',
+      'quantidade_atual': 0,
+      'quantidade_minima': 1,
+      'quantidade_maxima': 3,
+      'quantidade_recomendada_ia': 2,
+      'local_armazenamento': 'Hematologia - Refrigerador',
+      'unidade_medida': 'frascos',
+      'data_validade': '2027-06-30',
+      'lote': 'ECU-2026-01',
+      'fornecedor_id': 3,
+      'tipo': 'essencial_baixa_demanda',
+      'status': 'critico',
+      'ultima_atualizacao': now,
+      'historico_consumo': jsonEncode([0, 1, 0, 0, 1, 0, 0, 1, 0, 0]),
+    });
+
+    await dbClient.insert('itens', {
+      'id': 7,
+      'nome': 'Nusinersen 12mg (Spinraza)',
+      'categoria': 'Neurológicos',
+      'quantidade_atual': 1,
+      'quantidade_minima': 1,
+      'quantidade_maxima': 4,
+      'quantidade_recomendada_ia': 3,
+      'local_armazenamento': 'Neurologia Pediátrica - Geladeira',
+      'unidade_medida': 'frascos',
+      'data_validade': '2026-12-01',
+      'lote': 'NUS-2026-05',
+      'fornecedor_id': 2,
+      'tipo': 'essencial_baixa_demanda',
+      'status': 'atencao',
+      'ultima_atualizacao': now,
+      'historico_consumo': jsonEncode([0, 0, 1, 0, 1, 0, 0, 1, 0, 1]),
+    });
+
+    await dbClient.insert('itens', {
+      'id': 8,
+      'nome': 'Nivolumab 40mg (Opdivo)',
+      'categoria': 'Quimioterápicos',
+      'quantidade_atual': 3,
+      'quantidade_minima': 2,
+      'quantidade_maxima': 10,
+      'quantidade_recomendada_ia': 6,
+      'local_armazenamento': 'Oncologia - Geladeira Especializada',
+      'unidade_medida': 'frascos',
+      'data_validade': '2026-09-18',
+      'lote': 'NIV-2026-02',
       'fornecedor_id': 1,
       'tipo': 'essencial_baixa_demanda',
       'status': 'atencao',
       'ultima_atualizacao': now,
-      'historico_consumo': jsonEncode([1, 0, 1, 2, 1, 0, 1, 2, 1, 1]),
+      'historico_consumo': jsonEncode([1, 2, 1, 0, 1, 2, 1, 1, 0, 2]),
     });
 
+    await dbClient.insert('itens', {
+      'id': 9,
+      'nome': 'Tocilizumabe 400mg (Actemra)',
+      'categoria': 'Imunobiológicos',
+      'quantidade_atual': 4,
+      'quantidade_minima': 2,
+      'quantidade_maxima': 8,
+      'quantidade_recomendada_ia': 5,
+      'local_armazenamento': 'Reumatologia - Câmara Fria',
+      'unidade_medida': 'frascos',
+      'data_validade': '2027-05-15',
+      'lote': 'TOC-2026-04',
+      'fornecedor_id': 2,
+      'tipo': 'essencial_baixa_demanda',
+      'status': 'normal',
+      'ultima_atualizacao': now,
+      'historico_consumo': jsonEncode([1, 1, 2, 1, 0, 1, 2, 1, 1, 0]),
+    });
+
+    await dbClient.insert('itens', {
+      'id': 10,
+      'nome': 'Daptomicina 500mg',
+      'categoria': 'Antibióticos Especiais',
+      'quantidade_atual': 8,
+      'quantidade_minima': 5,
+      'quantidade_maxima': 15,
+      'quantidade_recomendada_ia': 12,
+      'local_armazenamento': 'Infectologia - Prateleira C',
+      'unidade_medida': 'frascos',
+      'data_validade': '2027-02-28',
+      'lote': 'DAP-2026-07',
+      'fornecedor_id': 3,
+      'tipo': 'essencial_baixa_demanda',
+      'status': 'normal',
+      'ultima_atualizacao': now,
+      'historico_consumo': jsonEncode([2, 1, 2, 3, 2, 1, 2, 3, 2, 1]),
+    });
+
+    //Hospitais
     await dbClient.insert('hospitais_parceiros', {
       'id': 1,
       'nome': 'HC Unicamp',
       'cidade': 'Campinas',
       'latitude': -22.821,
       'longitude': -47.064,
-      'contato': '(19) 0000-0001',
+      'contato': '(19) 3521-7000',
       'ativo': 1,
     });
     await dbClient.insert('hospitais_parceiros', {
       'id': 2,
-      'nome': 'Santa Casa – Campinas',
+      'nome': 'Santa Casa de Campinas',
       'cidade': 'Campinas',
       'latitude': -22.903,
       'longitude': -47.062,
-      'contato': '(19) 0000-0002',
+      'contato': '(19) 3756-6000',
+      'ativo': 1,
+    });
+    await dbClient.insert('hospitais_parceiros', {
+      'id': 3,
+      'nome': 'Hospital Mário Gatti',
+      'cidade': 'Campinas',
+      'latitude': -22.886,
+      'longitude': -47.046,
+      'contato': '(19) 3772-5700',
+      'ativo': 1,
+    });
+    await dbClient.insert('hospitais_parceiros', {
+      'id': 4,
+      'nome': 'Hospital São Luiz',
+      'cidade': 'Campinas',
+      'latitude': -22.830,
+      'longitude': -47.053,
+      'contato': '(19) 3729-8000',
       'ativo': 1,
     });
 
+    //Casos
+    await dbClient.insert('casos_clinicos', {
+      'especialidade': 'oncologia',
+      'descricao': 'Melanoma metastático stage IV - tratamento imunoterápico primeira linha',
+      'item_id': 4,
+      'quantidade_necessaria': 4,
+      'custo_estimado': 42000.00,
+      'prioridade': 'alta',
+      'frequencia_anual': 12,
+      'hospital_id': 1,
+      'data_criacao': now,
+    });
+
+    await dbClient.insert('casos_clinicos', {
+      'especialidade': 'oncologia',
+      'descricao': 'Carcinoma pulmonar não pequenas células PD-L1+ > 50%',
+      'item_id': 8,  // Nivolumab
+      'quantidade_necessaria': 6,
+      'custo_estimado': 38000.00,
+      'prioridade': 'alta',
+      'frequencia_anual': 18,
+      'hospital_id': 1,
+      'data_criacao': now,
+    });
+
+    await dbClient.insert('casos_clinicos', {
+      'especialidade': 'neurologia',
+      'descricao': 'AVC isquêmico agudo < 4.5h - candidato trombólise',
+      'item_id': 5,
+      'quantidade_necessaria': 1,
+      'custo_estimado': 15000.00,
+      'prioridade': 'alta',
+      'frequencia_anual': 48,
+      'hospital_id': 1,
+      'data_criacao': now,
+    });
+
+    await dbClient.insert('casos_clinicos', {
+      'especialidade': 'hematologia',
+      'descricao': 'Hemoglobinúria paroxística noturna (HPN) - profilaxia infecções',
+      'item_id': 6,
+      'quantidade_necessaria': 2,
+      'custo_estimado': 180000.00,
+      'prioridade': 'alta',
+      'frequencia_anual': 4,
+      'hospital_id': 1,
+      'data_criacao': now,
+    });
+
+    await dbClient.insert('casos_clinicos', {
+      'especialidade': 'neurologia',
+      'descricao': 'Atrofia muscular espinhal (AME) tipo1 - tratamento modificador doença',
+      'item_id': 7,
+      'quantidade_necessaria': 6,
+      'custo_estimado': 320000.00,
+      'prioridade': 'alta',
+      'frequencia_anual': 3,
+      'hospital_id': 3,
+      'data_criacao': now,
+    });
+
+    await dbClient.insert('casos_clinicos', {
+      'especialidade': 'reumatologia',
+      'descricao': 'Artrite reumatoide severa refratária - biológico anti-IL6',
+      'item_id': 9,
+      'quantidade_necessaria': 4,
+      'custo_estimado': 12000.00,
+      'prioridade': 'media',
+      'frequencia_anual': 24,
+      'hospital_id': 2,
+      'data_criacao': now,
+    });
+
+    await dbClient.insert('casos_clinicos', {
+      'especialidade': 'infectologia',
+      'descricao': 'Endocardite MRSA - antibiótico reserva',
+      'item_id': 10,
+      'quantidade_necessaria': 14,
+      'custo_estimado': 8000.00,
+      'prioridade': 'alta',
+      'frequencia_anual': 8,
+      'hospital_id': 1,
+      'data_criacao': now,
+    });
+
+    // PEDIDOS
     await dbClient.insert('pedidos', {
       'codigo': '#OG038',
       'fornecedor_id': 1,
@@ -303,25 +573,82 @@ class DatabaseService {
       'data_pedido': now,
       'data_eta': now,
       'data_entrega': null,
-      'valor_total': 3200,
+      'valor_total': 45000.00,
       'itens': jsonEncode([
-        {'item_id': 1, 'quantidade': 200, 'valor_unitario': 8},
+        {'item_id': 5, 'quantidade': 3, 'valor_unitario': 15000},
       ]),
-      'sla_horas': 48,
+      'sla_horas': 24,
       'motivo_atraso': 'Atraso logístico no fornecedor',
     });
 
+    await dbClient.insert('pedidos', {
+      'codigo': '#OG042',
+      'fornecedor_id': 3,
+      'status': 'em_rota',
+      'data_pedido': now,
+      'data_eta': now,
+      'data_entrega': null,
+      'valor_total': 180000.00,
+      'itens': jsonEncode([
+        {'item_id': 6, 'quantidade': 1, 'valor_unitario': 180000},
+      ]),
+      'sla_horas': 48,
+      'motivo_atraso': null,
+    });
+
+    await dbClient.insert('pedidos', {
+      'codigo': '#OG045',
+      'fornecedor_id': 2,
+      'status': 'pendente',
+      'data_pedido': now,
+      'data_eta': DateTime.now().add(const Duration(days: 3)).toIso8601String(),
+      'data_entrega': null,
+      'valor_total': 84000.00,
+      'itens': jsonEncode([
+        {'item_id': 4, 'quantidade': 2, 'valor_unitario': 42000},
+      ]),
+      'sla_horas': 72,
+      'motivo_atraso': null,
+    });
+
+    // TRANSFERÊNCIAS
     await dbClient.insert('transferencias', {
       'hospital_origem_id': 2,
       'hospital_destino_id': 1,
-      'item_id': 3,
-      'quantidade': 18,
+      'item_id': 5,
+      'quantidade': 2,
       'status': 'pendente',
       'urgencia': 'imediata',
       'sugerida_por_ia': 1,
       'data_criacao': now,
       'data_conclusao': null,
-      'justificativa': 'Redistribuição recomendada por IA',
+      'justificativa': 'HC necessita tPA para pacientes AVC. Hospital São Luiz tem excedente.',
+    });
+
+    await dbClient.insert('transferencias', {
+      'hospital_origem_id': 3,
+      'hospital_destino_id': 1,
+      'item_id': 8,
+      'quantidade': 3,
+      'status': 'aprovada',
+      'urgencia': 'moderada',
+      'sugerida_por_ia': 1,
+      'data_criacao': now,
+      'data_conclusao': null,
+      'justificativa': 'Redistribuição oncologia - otimizar estoque rede',
+    });
+
+    await dbClient.insert('transferencias', {
+      'hospital_origem_id': 4,
+      'hospital_destino_id': 2,
+      'item_id': 9,
+      'quantidade': 2,
+      'status': 'em_transito',
+      'urgencia': 'moderada',
+      'sugerida_por_ia': 1,
+      'data_criacao': now,
+      'data_conclusao': null,
+      'justificativa': 'Balanceamento reumatologia entre hospitais parceiros',
     });
   }
 }

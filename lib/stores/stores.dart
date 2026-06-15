@@ -513,9 +513,7 @@ class LogisticaStore extends ChangeNotifier {
   }
 
   void carregarMock() {
-    // Coordenadas (lat/lng) do fornecedor de cada pedido e do hospital de
-    // destino (HC Unicamp). Os pontos do mapa de Logística são gerados a
-    // partir desses dados — nenhum dado de localização de pacientes é usado.
+
     _pedidos = [
       {
         'id': 38, 'codigo': '#OG038', 'fornecedor': 'ForneceMed',

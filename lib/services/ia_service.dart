@@ -3,7 +3,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 class IaService {
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  // Método genérico privado para chamadas ao Firebase
   Future<Map<String, dynamic>> _chamarIA(String nomeFuncao, Map<String, dynamic> dados) async {
     try {
       final HttpsCallable callable = _functions.httpsCallable(nomeFuncao);
@@ -14,7 +13,6 @@ class IaService {
     }
   }
 
-  // 1. CÁLCULO DE ESTOQUE (Mapeia para a função 'calcularEstoque' no index.js)
   Future<Map<String, dynamic>> calcularEstoqueEssencial({
     required String nomeItem,
     required int quantidadeAtual,
@@ -31,7 +29,6 @@ class IaService {
     });
   }
 
-  // 2. ANÁLISE DE RESILIÊNCIA
   Future<Map<String, dynamic>> analisarResiliencia({
     required List<Map<String, dynamic>> estoqueAtual,
     required List<Map<String, dynamic>> historicoPedidos,
@@ -46,7 +43,6 @@ class IaService {
     });
   }
 
-  // 3. SUGESTÃO DE REDISTRIBUIÇÃO
   Future<Map<String, dynamic>> sugerirRedistribuicao({
     required List<Map<String, dynamic>> estadoHospitaisRede,
     required String itemCritico,

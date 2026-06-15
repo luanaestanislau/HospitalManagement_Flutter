@@ -38,8 +38,6 @@ Future<void> main() async {
   debugPrint("ID INSTALAÇÃO (FID): $fid");
   debugPrint("=============================");
 
-
-  // 3. Inicialização de Serviços
   final dbService = DatabaseService.instance;
   final iaService = IaService();
 

@@ -209,21 +209,28 @@ class _AbaEntregasState extends State<_AbaEntregas> {
           ),
         ),
 
-        // Mapa real (google_maps_flutter): marcadores gerados a partir dos
-        // pedidos, coloridos por status (vermelho=atrasado, azul=em rota,
-        // verde=entregue) e com o trajeto fornecedor → hospital.
-        const _MapaEntregas(),
-
         Expanded(
-          child: pedidosFiltrados.isEmpty
-              ? Center(
-              child: Text('Nenhum pedido neste status',
-                  style: TextStyle(color: Colors.grey.shade500)))
-              : ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: pedidosFiltrados.length,
-            itemBuilder: (_, i) =>
-                _PedidoCard(pedido: pedidosFiltrados[i]),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const _MapaEntregas(),
+
+                pedidosFiltrados.isEmpty
+                    ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 60),
+                  child: Text('Nenhum pedido neste status',
+                      style: TextStyle(color: Colors.grey.shade500)),
+                )
+                    : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: pedidosFiltrados.length,
+                  itemBuilder: (_, i) =>
+                      _PedidoCard(pedido: pedidosFiltrados[i]),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -323,7 +330,7 @@ class _PedidoCard extends StatelessWidget {
                 child: Text(
                   '${pedido['codigo']} · ${pedido['fornecedor']}',
                   style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w500),
+                      fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87),
                 ),
               ),
               AppBadge(label: badgeLabel, type: tipo),
@@ -436,68 +443,77 @@ class _AbaTransferenciasState extends State<_AbaTransferencias> {
           ),
         ),
 
-        _MapaRede(),
-
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppTheme.purple50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.purple200, width: 0.5),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.auto_awesome,
-                  color: AppTheme.purple600, size: 16),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Sugestões de redistribuição — IA Estratégica',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.purple900),
-                ),
-              ),
-              const AiBadge(),
-            ],
-          ),
-        ),
-
-        // Lista de transferências
         Expanded(
-          child: filtradas.isEmpty
-              ? Center(
+          child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.compare_arrows,
-                    size: 36, color: Colors.grey),
-                const SizedBox(height: 8),
-                Text('Nenhuma transferência neste status',
-                    style: TextStyle(color: Colors.grey.shade500)),
+                _MapaRede(),
+
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.purple50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.purple200, width: 0.5),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome,
+                          color: AppTheme.purple600, size: 16),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Sugestões de redistribuição — IA Estratégica',
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.purple900),
+                        ),
+                      ),
+                      const AiBadge(),
+                    ],
+                  ),
+                ),
+
+                // Lista de transferências
+                filtradas.isEmpty
+                    ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 60),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.compare_arrows,
+                          size: 36, color: Colors.grey),
+                      const SizedBox(height: 8),
+                      Text('Nenhuma transferência neste status',
+                          style: TextStyle(color: Colors.grey.shade500)),
+                    ],
+                  ),
+                )
+                    : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filtradas.length + 1,
+                  itemBuilder: (_, i) {
+                    if (i == filtradas.length) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: OutlinedButton.icon(
+                          onPressed: () =>
+                              _mostrarNovaTransferencia(context),
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Nova transferência manual'),
+                        ),
+                      );
+                    }
+                    return _TransferenciaCard(
+                        transferencia: filtradas[i]);
+                  },
+                ),
               ],
             ),
-          )
-              : ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: filtradas.length + 1,
-            itemBuilder: (_, i) {
-              if (i == filtradas.length) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: OutlinedButton.icon(
-                    onPressed: () =>
-                        _mostrarNovaTransferencia(context),
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Nova transferência manual'),
-                  ),
-                );
-              }
-              return _TransferenciaCard(
-                  transferencia: filtradas[i]);
-            },
           ),
         ),
       ],
@@ -549,7 +565,7 @@ class _TransferenciaCard extends StatelessWidget {
               Expanded(
                 child: Text(transferencia['item'] as String,
                     style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w500)),
+                        fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87)),
               ),
               if (sugeridaIa) const AiBadge(),
             ],
@@ -584,13 +600,6 @@ class _TransferenciaCard extends StatelessWidget {
   }
 }
 
-/// Mapa da aba **Entregas**.
-///
-/// Mostra o trajeto dos pedidos que vêm dos fornecedores até o hospital.
-/// Os marcadores são gerados a partir de `store.pedidos` e coloridos de
-/// acordo com o status: vermelho (atrasado), azul (em rota) e verde
-/// (entregue). Como observa a store, o mapa se atualiza sozinho sempre que
-/// os dados mudam.
 class _MapaEntregas extends StatelessWidget {
   const _MapaEntregas();
 
@@ -602,9 +611,15 @@ class _MapaEntregas extends StatelessWidget {
     final polylines = <Polyline>{};
 
     for (final p in pedidos) {
-      final status = p['status'] as String;
-      final fornecedor = LatLng(p['lat'] as double, p['lng'] as double);
-      final hospital = LatLng(p['destinoLat'] as double, p['destinoLng'] as double);
+      final status = (p['status'] as String?) ?? 'pendente';
+      
+      final lat = (p['lat'] as num?)?.toDouble() ?? -22.8336;
+      final lng = (p['lng'] as num?)?.toDouble() ?? -47.0653;
+      final dLat = (p['destinoLat'] as num?)?.toDouble() ?? -22.8336;
+      final dLng = (p['destinoLng'] as num?)?.toDouble() ?? -47.0653;
+
+      final fornecedor = LatLng(lat, lng);
+      final hospital = LatLng(dLat, dLng);
       final cor = _huePorStatus(status);
 
       markers.add(
@@ -619,7 +634,6 @@ class _MapaEntregas extends StatelessWidget {
         ),
       );
 
-      // Trajeto fornecedor → hospital (exceto já entregue).
       if (status != 'entregue') {
         polylines.add(
           Polyline(
@@ -632,13 +646,15 @@ class _MapaEntregas extends StatelessWidget {
       }
     }
 
-    // Marcador fixo do hospital de destino (HC Unicamp).
     if (pedidos.isNotEmpty) {
       final h = pedidos.first;
+      final dLat = (h['destinoLat'] as num?)?.toDouble() ?? 0.0;
+      final dLng = (h['destinoLng'] as num?)?.toDouble() ?? 0.0;
+      
       markers.add(
         Marker(
           markerId: const MarkerId('hospital-destino'),
-          position: LatLng(h['destinoLat'] as double, h['destinoLng'] as double),
+          position: LatLng(dLat, dLng),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
           infoWindow: const InfoWindow(title: 'HC Unicamp', snippet: 'Hospital de destino'),
         ),
@@ -663,12 +679,6 @@ class _MapaEntregas extends StatelessWidget {
       };
 }
 
-/// Mapa da aba **Transferências**.
-///
-/// Mostra a rede de hospitais parceiros e as movimentações de estoque entre
-/// eles. Para cada transferência sugerida pela IA, desenha o trajeto entre o
-/// hospital de origem e o de destino. Marcadores e trajetos são gerados a
-/// partir de `store.transferencias`.
 class _MapaRede extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -678,8 +688,13 @@ class _MapaRede extends StatelessWidget {
     final polylines = <Polyline>{};
 
     for (final t in transferencias) {
-      final origem = LatLng(t['origemLat'] as double, t['origemLng'] as double);
-      final destino = LatLng(t['destinoLat'] as double, t['destinoLng'] as double);
+      final oLat = (t['origemLat'] as num?)?.toDouble() ?? 0.0;
+      final oLng = (t['origemLng'] as num?)?.toDouble() ?? 0.0;
+      final dLat = (t['destinoLat'] as num?)?.toDouble() ?? 0.0;
+      final dLng = (t['destinoLng'] as num?)?.toDouble() ?? 0.0;
+
+      final origem = LatLng(oLat, oLng);
+      final destino = LatLng(dLat, dLng);
 
       markers.add(
         Marker(
@@ -714,8 +729,6 @@ class _MapaRede extends StatelessWidget {
   }
 }
 
-/// Widget base de mapa reutilizado pelas duas abas. Centraliza a câmera para
-/// enquadrar todos os marcadores informados.
 class _MapaBase extends StatelessWidget {
   final Set<Marker> markers;
   final Set<Polyline> polylines;
@@ -729,14 +742,16 @@ class _MapaBase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Centro da câmera: média das posições dos marcadores (fallback: Campinas).
     LatLng centro = const LatLng(-22.8336, -47.0653);
     if (markers.isNotEmpty) {
-      final lat = markers.map((m) => m.position.latitude).reduce((a, b) => a + b) /
-          markers.length;
-      final lng = markers.map((m) => m.position.longitude).reduce((a, b) => a + b) /
-          markers.length;
-      centro = LatLng(lat, lng);
+      try {
+        final lat = markers.map((m) => m.position.latitude).reduce((a, b) => a + b) /
+            markers.length;
+        final lng = markers.map((m) => m.position.longitude).reduce((a, b) => a + b) /
+            markers.length;
+        centro = LatLng(lat, lng);
+      } catch (e) {
+      }
     }
 
     return Container(
@@ -752,9 +767,8 @@ class _MapaBase extends StatelessWidget {
         markers: markers,
         polylines: polylines,
         myLocationButtonEnabled: false,
-        zoomControlsEnabled: false,
+        zoomControlsEnabled: true,
         mapToolbarEnabled: false,
-        liteModeEnabled: true, // mapa estático leve, ideal para preview embutido
       ),
     );
   }

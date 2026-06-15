@@ -348,7 +348,7 @@ class _EssencialCard extends StatelessWidget {
               Expanded(
                 child: Text(item['nome'],
                     style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w500)),
+                        fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.purple800)),
               ),
               AppBadge(
                 label: recomendado > 0 ? 'IA pronta' : 'Calcular',

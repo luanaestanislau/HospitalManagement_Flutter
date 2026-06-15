@@ -12,11 +12,6 @@ typedef PushAlertCallback = void Function({
   String tipo,
 });
 
-/// Serviço de push via FCM.
-///
-/// iOS (passos manuais):
-/// 1. Xcode → Runner → Signing & Capabilities → Push Notifications + Background Modes (Remote notifications)
-/// 2. Firebase Console → Project Settings → Cloud Messaging → upload da APNs Authentication Key (.p8)
 class NotificationService {
   NotificationService._();
 

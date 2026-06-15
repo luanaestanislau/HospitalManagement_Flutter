@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../stores/stores.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_widgets.dart';
@@ -229,6 +231,7 @@ class _EssencialIaCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
+                    color: AppTheme.purple800
                   ),
                 ),
               ),
@@ -407,7 +410,7 @@ class _AbaPrevisao extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // fl_chart ou charts_flutter
+        // fl_chart
         Card(
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(
@@ -432,11 +435,8 @@ class _AbaPrevisao extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 120,
-                  child: CustomPaint(
-                    size: const Size(double.infinity, 120),
-                    painter: _GraficoPainter(),
-                  ),
+                  height: 160,
+                  child: _GraficoPrevisaoFlChart(),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -515,54 +515,117 @@ class _Legenda extends StatelessWidget {
   }
 }
 
-class _GraficoPainter extends CustomPainter {
+class _GraficoPrevisaoFlChart extends StatelessWidget {
   @override
-  void paint(Canvas canvas, Size size) {
-    final historico = [0.5, 0.4, 0.6, 0.45, 0.55, 0.7, 0.5, 0.65];
-    final previsao = [0.65, 0.8, 0.75, 0.9];
+  Widget build(BuildContext context) {
+    final historico = [50.0, 40.0, 60.0, 45.0, 55.0, 70.0, 50.0, 65.0];
+    final previsao = [65.0, 80.0, 75.0, 90.0];
 
-    final paintHist = Paint()
-      ..color = AppTheme.blue400
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final paintPrev = Paint()
-      ..color = AppTheme.blue600
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final pathH = Path();
-    for (int i = 0; i < historico.length; i++) {
-      final x = i * size.width / (historico.length + previsao.length - 1);
-      final y = size.height * (1 - historico[i]);
-      if (i == 0)
-        pathH.moveTo(x, y);
-      else
-        pathH.lineTo(x, y);
-    }
-    canvas.drawPath(pathH, paintHist);
-
-    final dashPaint = Paint()
-      ..color = AppTheme.blue600
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final offsetX =
-        historico.length *
-        size.width /
-        (historico.length + previsao.length - 1);
-    for (int i = 0; i < previsao.length; i++) {
-      final x =
-          offsetX + i * size.width / (historico.length + previsao.length - 1);
-      final y = size.height * (1 - previsao[i]);
-      if (i % 2 == 0) {
-        canvas.drawCircle(Offset(x, y), 3, dashPaint);
-      }
-    }
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 20,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.white.withOpacity(0.05),
+              strokeWidth: 1,
+            );
+          },
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  value.toInt().toString(),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              getTitlesWidget: (value, meta) {
+                final labels = ['D-30', 'D-20', 'D-10', 'Hoje', 'D+7', 'D+14'];
+                int index = value.toInt();
+                if (index >= 0 && index < labels.length) {
+                  return Text(
+                    labels[index],
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 10,
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        borderData: FlBorderData(show: false),
+        minX: 0,
+        maxX: 5,
+        minY: 0,
+        maxY: 100,
+        lineBarsData: [
+          LineChartBarData(
+            spots: List.generate(
+              historico.length,
+              (i) => FlSpot(i * 0.625, historico[i]),
+            ),
+            isCurved: true,
+            color: AppTheme.blue400,
+            barWidth: 3,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 3,
+                  color: AppTheme.blue400,
+                  strokeWidth: 0,
+                );
+              },
+            ),
+            belowBarData: BarAreaData(show: false),
+          ),
+          // Linha de previsão (tracejada)
+          LineChartBarData(
+            spots: List.generate(
+              previsao.length,
+              (i) => FlSpot(3.125 + (i * 0.625), previsao[i]),
+            ),
+            isCurved: true,
+            color: AppTheme.blue600,
+            barWidth: 3,
+            dashArray: [5, 5],
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 4,
+                  color: AppTheme.blue600,
+                  strokeWidth: 2,
+                  strokeColor: Colors.white,
+                );
+              },
+            ),
+            belowBarData: BarAreaData(show: false),
+          ),
+        ],
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(_) => false;
 }
 
 class _RecomendacaoCard extends StatelessWidget {
@@ -664,67 +727,8 @@ class _AbaDistribuicao extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Container(
-          height: 160,
-          decoration: BoxDecoration(
-            color: AppTheme.blue50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.blue100),
-          ),
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.map_outlined,
-                      size: 36,
-                      color: AppTheme.blue400,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Mapa em tempo real',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.blue600,
-                      ),
-                    ),
-                    Text(
-                      '4 hospitais na rede',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Positioned(
-                top: 30,
-                left: 40,
-                child: _PontoHospital(cor: AppTheme.blue600),
-              ),
-              Positioned(
-                top: 60,
-                left: 100,
-                child: _PontoHospital(cor: AppTheme.red400),
-              ),
-              Positioned(
-                top: 40,
-                right: 60,
-                child: _PontoHospital(cor: AppTheme.green600),
-              ),
-              Positioned(
-                bottom: 40,
-                right: 40,
-                child: _PontoHospital(cor: AppTheme.amber400),
-              ),
-            ],
-          ),
-        ),
+        // Mapa real dos hospitais da rede
+        _MapaRedeHospitalar(),
         const SizedBox(height: 16),
 
         const Text(
@@ -824,31 +828,6 @@ class _AbaDistribuicao extends StatelessWidget {
   }
 }
 
-class _PontoHospital extends StatelessWidget {
-  final Color cor;
-
-  const _PontoHospital({required this.cor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 12,
-      height: 12,
-      decoration: BoxDecoration(
-        color: cor,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: cor.withOpacity(0.3),
-            blurRadius: 4,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _SugestaoCard extends StatelessWidget {
   final Map<String, dynamic> sugestao;
@@ -884,6 +863,7 @@ class _SugestaoCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
+                    color: AppTheme.purple800
                   ),
                 ),
               ),
@@ -1255,7 +1235,6 @@ class _EventoAtivo extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Banner de evento ativo
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -1295,7 +1274,6 @@ class _EventoAtivo extends StatelessWidget {
         ),
         const SectionDivider(label: 'Ações de impacto mínimo — IA calculando'),
 
-        // Timeline de ações
         ...acoes.asMap().entries.map(
           (e) =>
               _TimelineItem(acao: e.value, isLast: e.key == acoes.length - 1),
@@ -1496,7 +1474,7 @@ class _StatImpacto extends StatelessWidget {
   }
 }
 
-// ── Estado 3: Relatório pós-evento ────────────────────────────────────────────
+//
 class _RelatorioPostEvento extends StatelessWidget {
   final VoidCallback onReset;
 
@@ -1773,3 +1751,90 @@ TableRow _TabelaLinha2(String metrica, String comIa, String semIa) {
     ],
   );
 }
+
+
+class _MapaRedeHospitalar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final hospitais = [
+      {
+        'nome': 'HC Unicamp',
+        'lat': -22.821,
+        'lng': -47.064,
+        'status': 'OK',
+        'cor': AppTheme.blue600,
+      },
+      {
+        'nome': 'Santa Casa de Campinas',
+        'lat': -22.903,
+        'lng': -47.062,
+        'status': 'Demanda alta',
+        'cor': AppTheme.red400,
+      },
+      {
+        'nome': 'Hospital Mário Gatti',
+        'lat': -22.886,
+        'lng': -47.046,
+        'status': 'Atenção',
+        'cor': AppTheme.amber400,
+      },
+      {
+        'nome': 'Hospital São Luiz',
+        'lat': -22.830,
+        'lng': -47.053,
+        'status': 'Excedente',
+        'cor': AppTheme.green600,
+      },
+    ];
+
+    final markers = <Marker>{};
+    for (final h in hospitais) {
+      final cor = h['cor'] as Color;
+      final hue = cor == AppTheme.blue600
+          ? BitmapDescriptor.hueBlue
+          : cor == AppTheme.red400
+              ? BitmapDescriptor.hueRed
+              : cor == AppTheme.amber400
+                  ? BitmapDescriptor.hueOrange
+                  : BitmapDescriptor.hueGreen;
+
+      markers.add(
+        Marker(
+          markerId: MarkerId(h['nome'] as String),
+          position: LatLng(
+            (h['lat'] as num?)?.toDouble() ?? 0.0,
+            (h['lng'] as num?)?.toDouble() ?? 0.0,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(hue),
+          infoWindow: InfoWindow(
+            title: h['nome'] as String,
+            snippet: h['status'] as String,
+          ),
+        ),
+      );
+    }
+
+    const centro = LatLng(-22.860, -47.055);
+
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.blue100),
+      ),
+      child: GoogleMap(
+        initialCameraPosition: CameraPosition(
+          target: centro,
+          zoom: 11,
+        ),
+        markers: markers,
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: true,
+        mapToolbarEnabled: false,
+      ),
+    );
+  }
+}
+

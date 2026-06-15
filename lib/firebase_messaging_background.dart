@@ -5,17 +5,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'firebase_options.dart';
 
-/// Handler executado em isolate separado quando o app está em background/terminated.
-///
-/// IMPORTANTE: Para notificações aparecerem automaticamente em background,
-/// a mensagem enviada pelo Firebase Console ou API deve conter o campo
-/// "notification" (título + corpo). Mensagens só com "data" precisam
-/// ser exibidas manualmente aqui via flutter_local_notifications.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Se a mensagem tiver apenas dados (sem notification), exibe manualmente.
   if (message.notification == null && message.data.isNotEmpty) {
     const channel = AndroidNotificationChannel(
       'medistock_alertas',
