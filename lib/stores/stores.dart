@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:hospitalmanagement_flutter/services/ia_service.dart';
@@ -113,7 +114,11 @@ abstract class _AuthStoreBase with Store {
     final email = prefs.getString('user_email');
     if (email != null) {
       final database = await DatabaseService.instance.database;
-      final res = await database.query('usuarios', where: 'email = ?', whereArgs: [email]);
+      final res = await database.query(
+        'usuarios',
+        where: 'email = ?',
+        whereArgs: [email],
+      );
       if (res.isNotEmpty) {
         usuario = Map<String, dynamic>.from(res.first);
       }
@@ -149,7 +154,8 @@ class AlertasStore extends ChangeNotifier {
         'id': item['id'],
         'tipo': 'estoque_critico',
         'titulo': item['nome'],
-        'descricao': 'Qtd: ${item['quantidade_atual']} · Mín: ${item['quantidade_minima']}',
+        'descricao':
+            'Qtd: ${item['quantidade_atual']} · Mín: ${item['quantidade_minima']}',
         'prioridade': 'critico',
         'item_id': item['id'],
         'acoes': ['Repor', 'Ver', 'Redistribuir'],
@@ -183,28 +189,40 @@ class AlertasStore extends ChangeNotifier {
   void carregarMock() {
     _alertas = [
       {
-        'id': 1, 'tipo': 'estoque_critico', 'prioridade': 'critico',
+        'id': 1,
+        'tipo': 'estoque_critico',
+        'prioridade': 'critico',
         'titulo': 'Soro Fisiológico 500ml',
         'descricao': 'Qtd: 18 un · Mín: 100 · Setor: UTI',
-        'item_id': 1, 'acoes': ['Repor', 'Ver', 'Redistribuir'],
+        'item_id': 1,
+        'acoes': ['Repor', 'Ver', 'Redistribuir'],
       },
       {
-        'id': 2, 'tipo': 'estoque_critico', 'prioridade': 'critico',
+        'id': 2,
+        'tipo': 'estoque_critico',
+        'prioridade': 'critico',
         'titulo': 'Luva Estéril P',
         'descricao': 'Qtd: 5 cx · Mín: 30 · Setor: CC',
-        'item_id': 3, 'acoes': ['Repor', 'Rastrear'],
+        'item_id': 3,
+        'acoes': ['Repor', 'Rastrear'],
       },
       {
-        'id': 3, 'tipo': 'validade', 'prioridade': 'atencao',
+        'id': 3,
+        'tipo': 'validade',
+        'prioridade': 'atencao',
         'titulo': 'Seringa 5ml',
         'descricao': 'Lote MN-2024 · Vence em 12 dias',
-        'item_id': 2, 'acoes': ['Descartar', 'Redistribuir'],
+        'item_id': 2,
+        'acoes': ['Descartar', 'Redistribuir'],
       },
       {
-        'id': 4, 'tipo': 'atraso_entrega', 'prioridade': 'atencao',
+        'id': 4,
+        'tipo': 'atraso_entrega',
+        'prioridade': 'atencao',
         'titulo': 'Entrega #OG38 atrasada',
         'descricao': 'ForneceMed · SLA excedido em 2h',
-        'pedido_id': 38, 'acoes': ['Rastrear', 'Contatar'],
+        'pedido_id': 38,
+        'acoes': ['Rastrear', 'Contatar'],
       },
     ];
     notifyListeners();
@@ -264,62 +282,122 @@ class EstoqueStore extends ChangeNotifier {
     }
   }
 
-  Future<void> calcularEstoqueIa(int itemId) async {
+  Future<void> calcularEstoqueBasico(int itemId) async {
     final item = _itens.firstWhere((i) => i['id'] == itemId);
     final historico = (jsonDecode(item['historico_consumo'] ?? '[]') as List)
         .map((e) => e as int)
         .toList();
 
-    try {
-      final resultado = await ia.calcularEstoqueEssencial(
-        nomeItem: item['nome'],
-        quantidadeAtual: item['quantidade_atual'],
-        historicoConsumo30dias: historico,
-        locaisDisponiveis: ['Farmácia Central A1', 'Farmácia Central B2', 'Almoxarifado Norte'],
-        especialidadeHospital: 'Hospital geral universitário',
+    final mediaDiaria = historico.isEmpty
+        ? (item['quantidade_minima'] as int? ?? 0).toDouble()
+        : historico.reduce((a, b) => a + b) / historico.length;
+    final tipo = (item['tipo'] ?? 'primordial').toString();
+    final localIdeal = _sugerirLocalArmazenamento(item);
+
+    final update = <String, dynamic>{
+      'local_armazenamento': localIdeal,
+      'ultima_atualizacao': DateTime.now().toIso8601String(),
+    };
+
+    if (tipo == 'primordial') {
+      final minimoBase = max(
+        item['quantidade_minima'] as int? ?? 0,
+        (mediaDiaria * 7 + (mediaDiaria * 1.5)).ceil(),
       );
-
-      await database.update('itens', {
-        'quantidade_recomendada_ia': resultado['quantidadeRecomendada'],
-        'local_armazenamento': resultado['localIdeal'],
-        'ultima_atualizacao': DateTime.now().toIso8601String(),
-      }, where: 'id = ?', whereArgs: [itemId]);
-
-      await carregar();
-    } catch (e) {
-      _erro = 'Erro ao calcular com IA: $e';
-      notifyListeners();
+      update['quantidade_minima'] = minimoBase;
+    } else {
+      final recomendada = max(
+        item['quantidade_minima'] as int? ?? 1,
+        (mediaDiaria * 14).ceil(),
+      );
+      update['quantidade_recomendada_ia'] = recomendada;
     }
+
+    await database.update(
+      'itens',
+      update,
+      where: 'id = ?',
+      whereArgs: [itemId],
+    );
+
+    await carregar();
+  }
+
+  Future<void> calcularEstoqueIa(int itemId) => calcularEstoqueBasico(itemId);
+
+  String _sugerirLocalArmazenamento(Map<String, dynamic> item) {
+    final localAtual = item['local_armazenamento']?.toString();
+    if ((localAtual ?? '').isNotEmpty && item['tipo'] == 'primordial') {
+      return localAtual!;
+    }
+
+    final categoria = item['categoria']?.toString().toLowerCase() ?? '';
+    if (categoria.contains('quimioter')) {
+      return 'Oncologia - Geladeira Especializada';
+    }
+    if (categoria.contains('trombol')) {
+      return 'Emergência - Armário Refrigerado A';
+    }
+    if (categoria.contains('imunossup')) {
+      return 'Hematologia - Refrigerador';
+    }
+    if (categoria.contains('neurol')) {
+      return 'Neurologia Pediátrica - Geladeira';
+    }
+    if (categoria.contains('imunobiol')) {
+      return 'Câmara Fria 01';
+    }
+    return localAtual ?? 'Farmácia Central A1';
   }
 
   // Dados mock para desenvolvimento (use antes de ter o banco populado)
   void carregarMock() {
     _itens = [
       {
-        'id': 1, 'nome': 'Soro Fisiológico 500ml', 'tipo': 'primordial',
-        'quantidade_atual': 18, 'quantidade_minima': 100, 'status': 'critico',
+        'id': 1,
+        'nome': 'Soro Fisiológico 500ml',
+        'tipo': 'primordial',
+        'quantidade_atual': 18,
+        'quantidade_minima': 100,
+        'status': 'critico',
         'local_armazenamento': 'Farmácia Central A1',
       },
       {
-        'id': 2, 'nome': 'Seringa 10ml', 'tipo': 'primordial',
-        'quantidade_atual': 340, 'quantidade_minima': 200, 'status': 'atencao',
+        'id': 2,
+        'nome': 'Seringa 10ml',
+        'tipo': 'primordial',
+        'quantidade_atual': 340,
+        'quantidade_minima': 200,
+        'status': 'atencao',
         'local_armazenamento': 'Almoxarifado Norte',
       },
       {
-        'id': 3, 'nome': 'Luva Estéril S', 'tipo': 'primordial',
-        'quantidade_atual': 820, 'quantidade_minima': 100, 'status': 'normal',
+        'id': 3,
+        'nome': 'Luva Estéril S',
+        'tipo': 'primordial',
+        'quantidade_atual': 820,
+        'quantidade_minima': 100,
+        'status': 'normal',
         'local_armazenamento': 'Almoxarifado Norte',
       },
       {
-        'id': 4, 'nome': 'Epinefrina 1mg/ml', 'tipo': 'essencial_baixa_demanda',
-        'quantidade_atual': 8, 'quantidade_minima': 5,
-        'quantidade_recomendada_ia': 22, 'status': 'atencao',
+        'id': 4,
+        'nome': 'Epinefrina 1mg/ml',
+        'tipo': 'essencial_baixa_demanda',
+        'quantidade_atual': 8,
+        'quantidade_minima': 5,
+        'quantidade_recomendada_ia': 22,
+        'status': 'atencao',
         'local_armazenamento': 'Farmácia Central B2',
       },
       {
-        'id': 5, 'nome': 'Morfina 10mg/ml', 'tipo': 'essencial_baixa_demanda',
-        'quantidade_atual': 5, 'quantidade_minima': 3,
-        'quantidade_recomendada_ia': 15, 'status': 'atencao',
+        'id': 5,
+        'nome': 'Morfina 10mg/ml',
+        'tipo': 'essencial_baixa_demanda',
+        'quantidade_atual': 5,
+        'quantidade_minima': 3,
+        'quantidade_recomendada_ia': 15,
+        'status': 'atencao',
         'local_armazenamento': null,
       },
     ];
@@ -332,7 +410,7 @@ class IaStore extends ChangeNotifier {
   final EstoqueStore estoqueStore;
   final bool usarMockQuandoIaFalhar;
 
-  Map<String, dynamic>? _analiseResiliencia;
+  Map<String, dynamic>? _analiseInterna;
   Map<String, dynamic>? _eventoAtivo;
   bool _carregando = false;
   String? _erro;
@@ -343,40 +421,94 @@ class IaStore extends ChangeNotifier {
     this.usarMockQuandoIaFalhar = false,
   });
 
-  Map<String, dynamic>? get analiseResiliencia => _analiseResiliencia;
+  Map<String, dynamic>? get analiseInterna => _analiseInterna;
+  Map<String, dynamic>? get analiseResiliencia => _analiseInterna;
   Map<String, dynamic>? get eventoAtivo => _eventoAtivo;
   bool get carregando => _carregando;
   String? get erro => _erro;
 
-  int get scoreResiliencia =>
-      _analiseResiliencia?['scoreResiliencia'] as int? ?? 0;
+  int get scoreInterno => _analiseInterna?['scoreInterno'] as int? ?? 0;
+  int get scoreResiliencia => scoreInterno;
 
-  List<dynamic> get cenarios =>
-      _analiseResiliencia?['cenarios'] as List? ?? [];
+  String get classificacaoInterna =>
+      _analiseInterna?['classificacao'] as String? ?? 'Sem análise';
 
-  Future<void> analisarResiliencia() async {
+  List<Map<String, dynamic>> get recomendacoesInternas =>
+      (_analiseInterna?['recomendacoes'] as List? ?? [])
+          .cast<Map<String, dynamic>>();
+  List<dynamic> get cenarios => recomendacoesInternas;
+
+  Future<void> analisarOtimizacaoInterna() async {
     _carregando = true;
     _erro = null;
     notifyListeners();
 
     try {
-      final estoqueData = estoqueStore.itens.map((i) => {
-        'nome': i['nome'],
-        'quantidade': i['quantidade_atual'],
-        'minimo': i['quantidade_minima'],
-        'status': i['status'],
-      }).toList();
+      final itens = estoqueStore.itensEssenciaisBaixaDemanda;
+      final itensPrioritarios = estoqueStore.itens
+          .where((i) => (i['tipo'] ?? '') == 'essencial_baixa_demanda')
+          .toList();
+      final itensSemLocal = itens
+          .where((i) => (i['local_armazenamento'] ?? '').toString().isEmpty)
+          .length;
+      final itensCriticos = itens.where((i) => i['status'] == 'critico').length;
+      final itensAtencao = itens.where((i) => i['status'] == 'atencao').length;
 
-      _analiseResiliencia = await ia.analisarResiliencia(
-        estoqueAtual: estoqueData,
-        historicoPedidos: [],
-        fornecedoresAtivos: ['ForneceMed', 'MediSupply', 'HospitalFarma'],
-        diasSemEntrega: 2,
+      final recomendacoes =
+          itens.map((item) {
+            final atual = item['quantidade_atual'] as int? ?? 0;
+            final minimo = item['quantidade_minima'] as int? ?? 0;
+            final recomendado =
+                item['quantidade_recomendada_ia'] as int? ?? minimo;
+            final local =
+                item['local_armazenamento']?.toString() ?? 'Não definido';
+            return {
+              'item': item['nome'],
+              'status': item['status'],
+              'localAtual': local,
+              'localSugerido': _sugerirLocal(item),
+              'quantidade': atual,
+              'quantidadeSugerida': max(recomendado, minimo),
+              'prioridade': atual <= minimo ? 'alta' : 'media',
+              'tempoTransferencia': _tempoTransferenciaEstimado(item),
+              'motivo': _motivoInterno(item),
+            };
+          }).toList()..sort((a, b) {
+            final prioridadeA = a['prioridade'] == 'alta' ? 0 : 1;
+            final prioridadeB = b['prioridade'] == 'alta' ? 0 : 1;
+            if (prioridadeA != prioridadeB) {
+              return prioridadeA.compareTo(prioridadeB);
+            }
+            return (b['quantidadeSugerida'] as int).compareTo(
+              a['quantidadeSugerida'] as int,
+            );
+          });
+
+      final score = max(
+        0,
+        100 -
+            (itensCriticos * 12) -
+            (itensAtencao * 4) -
+            (itensSemLocal * 8) -
+            (itensPrioritarios.length * 2),
       );
+
+      _analiseInterna = {
+        'scoreInterno': score,
+        'classificacao': score >= 85
+            ? 'Otimizado'
+            : score >= 65
+            ? 'Controlado'
+            : 'Atenção',
+        'recomendacoes': recomendacoes.take(4).toList(),
+        'itensCriticos': itensCriticos,
+        'itensSemLocal': itensSemLocal,
+        'itensPrioritarios': itensPrioritarios.length,
+      };
     } catch (e) {
       _erro = e.toString();
       if (usarMockQuandoIaFalhar) {
-        _carregarMockResiliencia();
+        _carregarMockInterno();
       }
     }
 
@@ -384,43 +516,78 @@ class IaStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _carregarMockResiliencia() {
-    _analiseResiliencia = {
-      'scoreResiliencia': 72,
-      'classificacao': 'Moderado',
-      'cenarios': [
+  Future<void> analisarResiliencia() => analisarOtimizacaoInterna();
+
+  String _sugerirLocal(Map<String, dynamic> item) {
+    final categoria = item['categoria']?.toString().toLowerCase() ?? '';
+    if (categoria.contains('quimioter')) {
+      return 'Oncologia - Geladeira Especializada';
+    }
+    if (categoria.contains('trombol')) {
+      return 'Emergência - Armário Refrigerado A';
+    }
+    if (categoria.contains('imunossup')) {
+      return 'Hematologia - Refrigerador';
+    }
+    if (categoria.contains('neurol')) {
+      return 'Neurologia Pediátrica - Geladeira';
+    }
+    if (categoria.contains('imunobiol')) {
+      return 'Câmara Fria 01';
+    }
+    return item['local_armazenamento']?.toString() ?? 'Farmácia Central A1';
+  }
+
+  int _tempoTransferenciaEstimado(Map<String, dynamic> item) {
+    final status = item['status']?.toString() ?? 'normal';
+    final base = switch (status) {
+      'critico' => 20,
+      'atencao' => 40,
+      _ => 60,
+    };
+    return base;
+  }
+
+  String _motivoInterno(Map<String, dynamic> item) {
+    final status = item['status']?.toString() ?? 'normal';
+    return switch (status) {
+      'critico' => 'Reposição imediata para reduzir tempo de transferência',
+      'atencao' => 'Manter perto do ponto de uso e evitar retrabalho logístico',
+      _ => 'Estoque estável, sem necessidade de movimentação urgente',
+    };
+  }
+
+  void _carregarMockInterno() {
+    _analiseInterna = {
+      'scoreInterno': 88,
+      'classificacao': 'Otimizado',
+      'itensCriticos': 2,
+      'itensSemLocal': 0,
+      'transferenciasAtivas': 3,
+      'recomendacoes': [
         {
-          'tipo': 'atraso_entrega',
-          'titulo': 'Falha de entrega',
-          'probabilidade': 34,
-          'impactoFinanceiro': 12800,
-          'diasCoberturaAtual': 2,
-          'acaoRecomendada': 'Manter estoque de segurança de 38 un de Soro Fisiológico.',
-          'estoqueSegurancaSugerido': 38,
+          'item': 'Pembrolizumab 100mg (Keytruda)',
+          'status': 'atencao',
+          'localAtual': 'Oncologia - Geladeira Especializada',
+          'localSugerido': 'Oncologia - Geladeira Especializada',
+          'quantidade': 2,
+          'quantidadeSugerida': 4,
           'prioridade': 'alta',
+          'tempoTransferencia': 20,
+          'motivo': 'Manter no ponto de uso reduz o tempo de resposta.',
         },
         {
-          'tipo': 'fraude',
-          'titulo': 'Fraude ou golpe',
-          'probabilidade': 8,
-          'impactoFinanceiro': 12400,
-          'diasCoberturaAtual': 6,
-          'acaoRecomendada': 'Ativar dupla verificação de lotes para 3 fornecedores.',
-          'estoqueSegurancaSugerido': 0,
+          'item': 'Eculizumab 300mg (Soliris)',
+          'status': 'critico',
+          'localAtual': 'Hematologia - Refrigerador',
+          'localSugerido': 'Hematologia - Refrigerador',
+          'quantidade': 0,
+          'quantidadeSugerida': 2,
           'prioridade': 'alta',
-        },
-        {
-          'tipo': 'catastrofe',
-          'titulo': 'Catástrofe / demanda súbita',
-          'probabilidade': 5,
-          'impactoFinanceiro': 45000,
-          'diasCoberturaAtual': 3,
-          'acaoRecomendada': 'Plano emergencial ativa redistribuição com 4 hospitais parceiros.',
-          'estoqueSegurancaSugerido': 120,
-          'prioridade': 'media',
+          'tempoTransferencia': 20,
+          'motivo': 'Movimentação curta para reduzir indisponibilidade.',
         },
       ],
-      'proximoPontoFraco': 'Morfina 10mg/ml',
     };
   }
 }
@@ -438,6 +605,10 @@ class LogisticaStore extends ChangeNotifier {
       _pedidos.where((p) => p['status'] == 'atrasado').length;
   int get pedidosEmRota =>
       _pedidos.where((p) => p['status'] == 'em_rota').length;
+  int get pedidosExtravioReembolso =>
+      _pedidos.where((p) => p['status'] == 'extravio_reembolso').length;
+  int get pedidosNaoEntregues =>
+      _pedidos.where((p) => p['status'] == 'nao_entregue').length;
 
   Future<void> carregarDoBanco() async {
     final db = DatabaseService.instance;
@@ -478,11 +649,18 @@ class LogisticaStore extends ChangeNotifier {
         'eta': p['data_eta'] != null ? 'previsto' : '--',
         'sla_excedido': status == 'atrasado' ? 'acima do SLA' : null,
         'hora_entrega': p['data_entrega'] != null ? 'entregue' : null,
+        'valor_total': p['valor_total'] ?? 0,
+        'motivo_ocorrencia': p['motivo_ocorrencia'],
+        'valor_reembolso': p['valor_reembolso'] ?? 0,
+        'reentrega_prevista_em': p['reentrega_prevista_em'],
         'item': '$itemNome · $qtd un',
       };
     }).toList();
 
-    final transferenciasDb = await db.query('transferencias', orderBy: 'id DESC');
+    final transferenciasDb = await db.query(
+      'transferencias',
+      orderBy: 'id DESC',
+    );
     _transferencias = transferenciasDb.map((t) {
       final origemId = t['hospital_origem_id'] as int?;
       final destinoId = t['hospital_destino_id'] as int?;
@@ -513,11 +691,11 @@ class LogisticaStore extends ChangeNotifier {
   }
 
   void carregarMock() {
-
     _pedidos = [
       {
         'id': 38, 'codigo': '#OG038', 'fornecedor': 'ForneceMed',
         'status': 'atrasado', 'eta': '12h00', 'sla_excedido': '2h10',
+        'valor_total': 45000.0,
         'item': 'Soro Fisiológico 500ml',
         'lat': -22.9099, 'lng': -47.0626, // ForneceMed · Campinas
         'destinoLat': -22.8336, 'destinoLng': -47.0653, // HC Unicamp
@@ -525,12 +703,46 @@ class LogisticaStore extends ChangeNotifier {
       {
         'id': 41, 'codigo': '#OG041', 'fornecedor': 'MediSupply',
         'status': 'em_rota', 'eta': '16h30', 'item': 'Seringa 5ml · 500 un',
+        'valor_total': 32000.0,
         'lat': -23.5505, 'lng': -46.6333, // MediSupply · São Paulo
         'destinoLat': -22.8336, 'destinoLng': -47.0653, // HC Unicamp
       },
       {
+        'id': 48,
+        'codigo': '#OG048',
+        'fornecedor': 'ForneceMed',
+        'status': 'extravio_reembolso',
+        'valor_total': 30000.0,
+        'eta': 'reentrega em 48h',
+        'sla_excedido': '12h50',
+        'motivo_ocorrencia': 'Extravio confirmado em auditoria de rota',
+        'valor_reembolso': 30000.0,
+        'item': 'Daptomicina 500mg · 4 frascos',
+        'lat': -22.9099,
+        'lng': -47.0626,
+        'destinoLat': -22.8336,
+        'destinoLng': -47.0653,
+      },
+      {
+        'id': 49,
+        'codigo': '#OG049',
+        'fornecedor': 'PharmaExpress',
+        'status': 'nao_entregue',
+        'valor_total': 180000.0,
+        'eta': '--',
+        'sla_excedido': '10h20',
+        'motivo_ocorrencia': 'Nao entregue apos tentativas de reprogramacao',
+        'valor_reembolso': 0.0,
+        'item': 'Eculizumab 300mg · 1 frasco',
+        'lat': -23.5505,
+        'lng': -46.6333,
+        'destinoLat': -22.8336,
+        'destinoLng': -47.0653,
+      },
+      {
         'id': 39, 'codigo': '#OG039', 'fornecedor': 'ForneceMed',
         'status': 'entregue', 'hora_entrega': '13h44',
+        'valor_total': 9800.0,
         'item': 'Luva Estéril P · 200 cx',
         'lat': -22.8951, 'lng': -47.0419, // ForneceMed (CD) · Campinas
         'destinoLat': -22.8336, 'destinoLng': -47.0653, // HC Unicamp
@@ -557,4 +769,3 @@ class LogisticaStore extends ChangeNotifier {
     notifyListeners();
   }
 }
-

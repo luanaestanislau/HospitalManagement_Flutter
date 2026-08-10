@@ -3,7 +3,10 @@ import 'package:cloud_functions/cloud_functions.dart';
 class IaService {
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  Future<Map<String, dynamic>> _chamarIA(String nomeFuncao, Map<String, dynamic> dados) async {
+  Future<Map<String, dynamic>> _chamarIA(
+    String nomeFuncao,
+    Map<String, dynamic> dados,
+  ) async {
     try {
       final HttpsCallable callable = _functions.httpsCallable(nomeFuncao);
       final response = await callable.call(dados);
@@ -26,20 +29,6 @@ class IaService {
       'historico': historicoConsumo30dias,
       'locais': locaisDisponiveis,
       'especialidade': especialidadeHospital,
-    });
-  }
-
-  Future<Map<String, dynamic>> analisarResiliencia({
-    required List<Map<String, dynamic>> estoqueAtual,
-    required List<Map<String, dynamic>> historicoPedidos,
-    required List<String> fornecedoresAtivos,
-    required int diasSemEntrega,
-  }) async {
-    return await _chamarIA('analisarResiliencia', {
-      'estoque': estoqueAtual,
-      'pedidos': historicoPedidos,
-      'fornecedores': fornecedoresAtivos,
-      'diasAtraso': diasSemEntrega,
     });
   }
 

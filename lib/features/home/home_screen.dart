@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 10),
 
-            // ── IA Estratégica resumo ──
+            // ── IA interna resumo ──
             Card(
               color: const Color(0xFF1E1E1E),
               shape: RoundedRectangleBorder(
@@ -220,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             children: [
                               const Text(
-                                'IA Estratégica',
+                                'IA Interna',
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -233,13 +233,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${estoqueStore.itensEssenciaisBaixaDemanda.length} itens essenciais com cálculo pendente',
+                            '${estoqueStore.itensEssenciaisBaixaDemanda.length} itens prioritários para armazenagem',
                             style: TextStyle(fontSize: 12, color: Colors.white),
                           ),
-                          if (iaStore.scoreResiliencia > 0) ...[
+                          if (iaStore.scoreInterno > 0) ...[
                             const SizedBox(height: 4),
                             Text(
-                              'Resiliência: ${iaStore.scoreResiliencia}/100',
+                              'Otimização interna: ${iaStore.scoreInterno}/100',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.amber600,

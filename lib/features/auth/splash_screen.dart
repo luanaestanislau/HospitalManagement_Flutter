@@ -12,7 +12,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -42,11 +41,11 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 13,),
+              const SizedBox(height: 13),
               const AuthHeader(
                 icon: Icons.medical_information_outlined,
                 titulo: 'MediStock',
-                subtitulo: 'Gestão inteligente de insumos hospitalares com IA',
+                subtitulo: 'Gestão interna de insumos hospitalares com IA',
               ),
               const SizedBox(height: 48),
 
@@ -57,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 16),
               _FeatureItem(
                 icon: Icons.inventory_2_outlined,
-                texto: 'Estoque crítico com IA preditiva',
+                texto: 'Estoque crítico com cálculo básico',
               ),
               const SizedBox(height: 16),
               _FeatureItem(
@@ -67,12 +66,12 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 16),
               _FeatureItem(
                 icon: Icons.local_shipping_outlined,
-                texto: 'Rastreamento de entregas',
+                texto: 'Redistribuição entre hospitais',
               ),
               const SizedBox(height: 16),
               _FeatureItem(
                 icon: Icons.shield_outlined,
-                texto: 'Análise de resiliência e cenários de risco',
+                texto: 'Otimização interna de armazenagem',
               ),
               const SizedBox(height: 16),
 
@@ -146,7 +145,7 @@ class _SplashScreenState extends State<SplashScreen> {
 }
 
 class _SaibaMaisSheet extends StatelessWidget {
-  const _SaibaMaisSheet({super.key});
+  const _SaibaMaisSheet();
 
   @override
   Widget build(BuildContext context) {
@@ -165,8 +164,8 @@ class _SaibaMaisSheet extends StatelessWidget {
             'Sistema de gestão de insumos hospitalares desenvolvido para '
             'reduzir desperdícios, prevenir faltas críticas e garantir que '
             'hospitais e pacientes nunca fiquem sem os recursos necessários.\n\n'
-            'Utiliza Inteligência Artificial para calcular estoques ideais, '
-            'antecipar riscos e coordenar redistribuição entre hospitais.',
+            'Utiliza Inteligência Artificial para coordenar armazenagem interna '
+            'e redistribuição entre hospitais, com cálculo básico para itens regulares.',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
           ),
           const SizedBox(height: 24),

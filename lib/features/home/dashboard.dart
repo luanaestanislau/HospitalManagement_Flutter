@@ -76,8 +76,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     alertasStore.gerarAlertas();
     await logisticaStore.carregarDoBanco();
 
-    if (iaStore.analiseResiliencia == null) {
-      await iaStore.analisarResiliencia();
+    if (iaStore.analiseInterna == null) {
+      await iaStore.analisarOtimizacaoInterna();
     }
   }
 
@@ -161,7 +161,11 @@ class _AlertIcon extends StatelessWidget {
               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               child: Text(
                 '$total',
-                style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 9,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),

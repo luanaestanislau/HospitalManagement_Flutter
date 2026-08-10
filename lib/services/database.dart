@@ -77,7 +77,7 @@ class DatabaseService {
         codigo TEXT NOT NULL,
         fornecedor_id INTEGER NOT NULL,
         status TEXT NOT NULL DEFAULT 'pendente',
-        -- pendente | em_rota | atrasado | entregue | cancelado
+        -- pendente | em_rota | atrasado | entregue | extravio_reembolso | nao_entregue | cancelado
         data_pedido TEXT NOT NULL,
         data_eta TEXT,
         data_entrega TEXT,
@@ -85,7 +85,10 @@ class DatabaseService {
         itens TEXT NOT NULL DEFAULT '[]',
         -- JSON: [{item_id, quantidade, valor_unitario}]
         sla_horas INTEGER DEFAULT 48,
-        motivo_atraso TEXT
+        motivo_atraso TEXT,
+        motivo_ocorrencia TEXT,
+        valor_reembolso REAL DEFAULT 0,
+        reentrega_prevista_em TEXT
       )
     ''');
 
@@ -496,7 +499,7 @@ class DatabaseService {
     await dbClient.insert('casos_clinicos', {
       'especialidade': 'oncologia',
       'descricao': 'Carcinoma pulmonar não pequenas células PD-L1+ > 50%',
-      'item_id': 8,  // Nivolumab
+      'item_id': 8,
       'quantidade_necessaria': 6,
       'custo_estimado': 38000.00,
       'prioridade': 'alta',
@@ -609,6 +612,42 @@ class DatabaseService {
       ]),
       'sla_horas': 72,
       'motivo_atraso': null,
+    });
+
+    await dbClient.insert('pedidos', {
+      'codigo': '#OG048',
+      'fornecedor_id': 1,
+      'status': 'extravio_reembolso',
+      'data_pedido': now,
+      'data_eta': now,
+      'data_entrega': null,
+      'valor_total': 30000.00,
+      'itens': jsonEncode([
+        {'item_id': 10, 'quantidade': 4, 'valor_unitario': 7500},
+      ]),
+      'sla_horas': 36,
+      'motivo_atraso': 'Extravio durante transferencia entre CDs',
+      'motivo_ocorrencia': 'Extravio confirmado em auditoria de rota',
+      'valor_reembolso': 30000.00,
+      'reentrega_prevista_em': DateTime.now().add(const Duration(days: 2)).toIso8601String(),
+    });
+
+    await dbClient.insert('pedidos', {
+      'codigo': '#OG049',
+      'fornecedor_id': 3,
+      'status': 'nao_entregue',
+      'data_pedido': now,
+      'data_eta': DateTime.now().subtract(const Duration(hours: 10)).toIso8601String(),
+      'data_entrega': null,
+      'valor_total': 180000.00,
+      'itens': jsonEncode([
+        {'item_id': 6, 'quantidade': 1, 'valor_unitario': 180000},
+      ]),
+      'sla_horas': 48,
+      'motivo_atraso': 'Fornecedor sem confirmacao de despacho',
+      'motivo_ocorrencia': 'Nao entregue apos tentativas de reprogramacao',
+      'valor_reembolso': 0,
+      'reentrega_prevista_em': null,
     });
 
     // TRANSFERÊNCIAS
